@@ -1,9 +1,10 @@
-"""Main istances decribed here:
+"""Main classes described here:
     * Task
     * TaskList
     * DBManager
     """
 import datetime
+from collections import OrderedDict
 
 
 class Task:
@@ -15,7 +16,7 @@ class Task:
         * due_date
         * priority
         * tags[]
-        * subtasks
+        * _subtasks - dict to store subtasks
     """
     def __init__(self, name, message, author, owner):
         self.name = name
@@ -29,7 +30,7 @@ class Task:
         self.due_date = None
         self.priority = 5
         self.tags = list()
-        self.subtasks = TaskList(self)
+        self._subtasks = OrderedDict()
 
     def __str__(self):
         line = "\n TASK: " + self.name.upper()+"\n"
@@ -41,64 +42,48 @@ class Task:
         line += "priority: "+str(self.priority)+"\n"
         return line
 
-    def str_generator (self):
-        for each in self.subtasks:
-            yield each.str_generator()
-        yield self.__str__()
-
-    def poisk_w_shirinu(self):
-        yield TaskList.poisk_w_shirinu(self)
-
-
     @staticmethod
     def wide_print(task,num=0):
         print(task)
-        for i in task.subtasks._storage:
-            Task.wide_print(task.subtasks._storage[i],num+1)
+        for i in task._subtasks:
+            Task.wide_print(task._subtasks[i],num+1)
 
-
-class TaskList:
-    """
-    Base collection to store and unit multiple tasks
-    """
-    def __init__(self, owner):
-        self.owner = owner
-        self._storage = dict()
-        self.actions_manager = None
-        self.plans_manager = None
-
-    def add_task(self, task, path):
+    def add_subtask(self, task, path):
         if len(path) > 1:
-            self._storage.get(path[0]).subtasks.add_task(task, path[1:])
+            self._subtasks.get(path[0]).add_subtask(task, path[1:])
         else:
             task.owner = self.owner
-            self._storage[path[0]] = task
-        # path[last_item] is new task.name
+            self._subtasks[path[0]] = task
 
-
-    def remove_task(self, path):
+    def remove_subtask(self, path):
         if len(path) > 1:
-            self._storage.get(path[0]).subtasks.remove_task(path[1:])
+            self._subtasks.get(path[0]).remove_task(path[1:])
         else:
-            self._storage.pop(path[0])
+            self._subtasks.pop(path[0])
 
-    def get_task(self, path):
-        task = self._storage.get(path[0])
+    def get_subtask(self, path):
+        task = self._subtasks.get(path[0])
         if len(path) > 1:
-            return task.subtasks.get_task(path[1:])
+            return task.get_task(path[1:])
         else:
             return task
-    # по идее, адд может работать как эдит
 
-    def iterate(self):
-        for each in self._storage:
-             yield self._storage[each]
+    def sort_subtasks_by_priority(self):
+        self._subtasks = sorted(self._subtasks.items(),key=lambda k :(k[1].priority,k[0]))
 
-    @staticmethod
-    def poisk_w_shirinu(item):
-        yield item
-        for each in item._storage:
-            TaskList.poisk_w_shirinu(each)
+    def sort_all_levels_by_priority(self):
+        self.sort_subtasks_by_priority()
+        for each in self._subtasks:
+            self._subtasks[each].sort_all_levels_by_priority()
+
+    def select_subtasks(self, key, result_dict=None):
+        if result_dict is None:
+            result_dict = OrderedDict()
+        for (k,v) in self._subtasks.items():
+            if key(v):
+                result_dict[k] = v
+            v.select_subtasks(key,result_dict)
+        return result_dict
 
 
 class Author:
@@ -106,7 +91,7 @@ class Author:
         self.name = name
 
 
-class DashBoard(TaskList):
+class DashBoard(Task):
     def __init__(self,owner):
         super().__init__(owner)
         # add some fields
