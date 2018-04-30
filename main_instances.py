@@ -4,6 +4,7 @@
     * DBManager
     """
 import datetime
+import json
 from collections import OrderedDict
 
 
@@ -18,6 +19,8 @@ class Task:
         * tags[]
         * _subtasks - dict to store subtasks
     """
+
+
     def __init__(self, name, message, author, owner):
         self.name = name
         self.message = message
@@ -27,7 +30,7 @@ class Task:
         else:
             self.owner = owner
         self.creation_date = datetime.datetime.now()
-        self.due_date = None
+        #self.due_date = None
         self.priority = 5
         self.tags = list()
         self._subtasks = OrderedDict()
@@ -38,7 +41,7 @@ class Task:
         line += self.message.title() + "\n"
         line += "by: " + str(self.author)+"\n"
         line += "created: "+ str(self.creation_date)+"\n"
-        line += "due: "+ str(self.due_date)+"\n"
+       #line += "due: "+ str(self.due_date)+"\n"
         line += "priority: "+str(self.priority)+"\n"
         return line
 
@@ -48,11 +51,12 @@ class Task:
         for i in task._subtasks:
             Task.wide_print(task._subtasks[i],num+1)
 
+
     def add_subtask(self, task, path):
         if len(path) > 1:
             self._subtasks.get(path[0]).add_subtask(task, path[1:])
         else:
-            task.owner = self.owner
+            task.owner = self
             self._subtasks[path[0]] = task
 
     def remove_subtask(self, path):
@@ -85,16 +89,47 @@ class Task:
             v.select_subtasks(key,result_dict)
         return result_dict
 
+    def to_json_dict(self):
+        d = {"name": self.name,
+                "message": self.message,
+                "author": str(self.author),
+                "creation_date": self.creation_date.isoformat(),
+                "priority": self.priority
+             }
+        sub_tasks = dict()
+        for (k,v) in self._subtasks.items():
+            sub_tasks[k] = v.to_json_dict()
+        d["subtasks"] = sub_tasks
+        return d
+
+    @staticmethod
+    def from_json_dict(j_dict,owner):
+        t = Task(j_dict["name"], j_dict["message"], Author(j_dict["author"]), None)
+        t.creation_date = j_dict["creation_date"]
+        t.priority = j_dict["priority"]
+        # tags +++
+        if owner is None:
+            t.owner = t
+        else:
+            owner.add_subtask(t, [t.name])
+        for (k, v) in j_dict["subtasks"].items():
+            t.add_subtask(Task.from_json_dict(v, t), [v["name"]])
+        return t
+
 
 class Author:
     def __init__(self,name):
         self.name = name
+
+    def __str__(self):
+        return self.name
 
 
 class DashBoard(Task):
     def __init__(self,owner):
         super().__init__(owner)
         # add some fields
+
 
 
 
