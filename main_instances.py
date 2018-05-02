@@ -3,8 +3,7 @@
     * TaskList
     * DBManager
     """
-import datetime
-import json
+import datetime as dt
 from collections import OrderedDict
 
 
@@ -21,7 +20,7 @@ class Task:
     """
 
 
-    def __init__(self, name, message, author, owner):
+    def __init__(self, name, message, author, start_date=None, end_date=None, owner=None):
         self.name = name
         self.message = message
         self.author = author
@@ -29,9 +28,11 @@ class Task:
             self.owner = self
         else:
             self.owner = owner
-        self.creation_date = datetime.datetime.now()
+        self.__creation_date = dt.datetime.now()
+        self.__start_date = start_date
+        self.__end_date = end_date
         #self.due_date = None
-        self.priority = 5
+        self.__priority = 3 # 1 <= priority <= 3
         self.tags = list()
         self._subtasks = OrderedDict()
 
@@ -41,15 +42,59 @@ class Task:
         line += self.message.title() + "\n"
         line += "by: " + str(self.author)+"\n"
         line += "created: "+ str(self.creation_date)+"\n"
-       #line += "due: "+ str(self.due_date)+"\n"
+        line += "start_time: "+ str(self.start_date)+"\n"
+        line += "end_time: " + str(self.end_date)+"\n"
+        #line += "remind_set: "+ str(self.remind_date)+"\n"
         line += "priority: "+str(self.priority)+"\n"
         return line
 
-    @staticmethod
-    def wide_print(task,num=0):
-        print(task)
-        for i in task._subtasks:
-            Task.wide_print(task._subtasks[i],num+1)
+    @property
+    def creation_date(self):
+        return self.__creation_date
+
+    @creation_date.setter
+    def creation_date(self,val):
+        if val is None:
+            self.__creation_date = dt.datetime.now()
+        else:
+            self.__creation_date = val
+
+    @property
+    def start_date(self):
+        return self.__start_date
+
+    @start_date.setter
+    def start_date(self,val):
+        if val is None:
+            self.__start_date = dt.datetime.now()
+        else:
+            self.__start_date = val
+
+    @property
+    def end_date(self):
+        return self.__end_date
+
+    @end_date.setter
+    def end_date(self,val):
+        if val is None:
+            self.__end_date = dt.datetime.max()
+        else:
+            self.__end_date = val
+
+    @property
+    def priority(self):
+        return self.__priority;
+
+    @priority.setter
+    def priority(self,val):
+        val = int(val)
+        if val > 3:
+            self.__priority = 3
+        elif val < 1:
+            self.__priority = 1
+        else:
+            self.__priority = val
+
 
 
     def add_subtask(self, task, path):
@@ -89,12 +134,39 @@ class Task:
             v.select_subtasks(key,result_dict)
         return result_dict
 
+    def select_next_5_minutes_tasks(self, result=None):
+        if result is None:
+            result_dict = {"start": OrderedDict(), "continue": OrderedDict(), "end": OrderedDict()}
+        for (k,v) in self._subtasks.items():
+            if Task.starts_next_five_minutes(v):
+                result_dict["start"][k] = v
+            if Task.ends_next_five_minutes(v):
+                result_dict["end"][k] = v
+            if Task.continues_next_five_minutes(v):
+                result_dict["continue"][k] = v
+            v.select_next_5_minutes_task(result_dict)
+        return result_dict
+
+    # def select_multiple_keys(self,result_list_of_dicts = None, *keys):
+    #     if len(keys) == 0 or keys is None:
+    #         return None
+    #     if result_list_of_dicts is None:
+    #         result_list_of_dicts = [OrderedDict*len(keys)]
+    #     for (k,v) in self._subtasks.items():
+    #         for i in range(len(keys)):
+    #             if keys[i](v):
+    #                 result_list_of_dicts[i][k] = v
+    #         v.select_multiple_keys(self, keys, result_list_of_dicts)
+    #     return result_list_of_dicts
+
     def to_json_dict(self):
         d = {"name": self.name,
-                "message": self.message,
-                "author": str(self.author),
-                "creation_date": self.creation_date.isoformat(),
-                "priority": self.priority
+             "message": self.message,
+             "author": str(self.author),
+             "creation_date": self.creation_date.isoformat(),
+             "start_date": self.start_date.isoformat(),
+             "end_date": self.end_date.isoformat(),
+             "priority": self.priority
              }
         sub_tasks = dict()
         for (k,v) in self._subtasks.items():
@@ -103,7 +175,14 @@ class Task:
         return d
 
     @staticmethod
-    def from_json_dict(j_dict,owner):
+    def wide_print(task,num=0):
+        print(task)
+        for i in task._subtasks:
+            Task.wide_print(task._subtasks[i],num+1)
+
+
+    @staticmethod
+    def from_dict(j_dict,owner):
         t = Task(j_dict["name"], j_dict["message"], Author(j_dict["author"]), None)
         t.creation_date = j_dict["creation_date"]
         t.priority = j_dict["priority"]
@@ -113,8 +192,34 @@ class Task:
         else:
             owner.add_subtask(t, [t.name])
         for (k, v) in j_dict["subtasks"].items():
-            t.add_subtask(Task.from_json_dict(v, t), [v["name"]])
+            t.add_subtask(Task.from_dict(v, t), [v["name"]])
         return t
+
+    @staticmethod
+    def is_today_task(task):
+        if task.start_date.date() <= dt.date.today() and task.end_date.date() >= dt.date.today():
+            return True
+        return False
+
+    @staticmethod
+    def starts_next_five_minutes(task):
+        delta = task.start_date.time() - dt.datetime.now().time()
+        if dt.timedelta() <= delta <= dt.timedelta(minutes=5):
+            return True
+        return False
+
+    @staticmethod
+    def ends_next_five_minutes(task):
+        delta = task.end_date - dt.datetime.now()
+        if dt.timedelta() <= delta <= dt.timedelta(minutes=5):
+            return True
+        return False
+
+    @staticmethod
+    def continues_next_five_minutes(task):
+        if task.end_date - dt.datetime.now() > dt.timedelta(minutes=5):
+            return True
+        return False
 
 
 class Author:
@@ -125,11 +230,11 @@ class Author:
         return self.name
 
 
-class DashBoard(Task):
-    def __init__(self,owner):
-        super().__init__(owner)
-        # add some fields
-
+class Plan:
+    def __init__(self,task_template, repeat_time, continue_if_rejected = False):
+        self.template = task_template
+        self.next_time = repeat_time
+        self.continue_if_rejected = continue_if_rejected
 
 
 
