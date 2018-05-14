@@ -5,6 +5,7 @@
     """
 import datetime as dt
 from collections import OrderedDict
+import copy
 
 
 class Task:
@@ -29,12 +30,14 @@ class Task:
         else:
             self.owner = owner
         self.__creation_date = dt.datetime.now()
-        self.__start_date = start_date
-        self.__end_date = end_date
+        self.start_date = start_date
+        self.end_date = end_date
         #self.due_date = None
         self.__priority = 3 # 1 <= priority <= 3
         self.tags = list()
         self._subtasks = OrderedDict()
+        self.done = False
+
 
     def __str__(self):
         line = "\n TASK: " + self.name.upper()+"\n"
@@ -77,13 +80,13 @@ class Task:
     @end_date.setter
     def end_date(self,val):
         if val is None:
-            self.__end_date = dt.datetime.max()
+            self.__end_date = dt.datetime.max
         else:
             self.__end_date = val
 
     @property
     def priority(self):
-        return self.__priority;
+        return self.__priority
 
     @priority.setter
     def priority(self,val):
@@ -134,8 +137,8 @@ class Task:
             v.select_subtasks(key,result_dict)
         return result_dict
 
-    def select_next_5_minutes_tasks(self, result=None):
-        if result is None:
+    def select_next_5_minutes_tasks(self, result_dict=None):
+        if result_dict is None:
             result_dict = {"start": OrderedDict(), "continue": OrderedDict(), "end": OrderedDict()}
         for (k,v) in self._subtasks.items():
             if Task.starts_next_five_minutes(v):
@@ -144,7 +147,7 @@ class Task:
                 result_dict["end"][k] = v
             if Task.continues_next_five_minutes(v):
                 result_dict["continue"][k] = v
-            v.select_next_5_minutes_task(result_dict)
+            v.select_next_5_minutes_tasks(result_dict)
         return result_dict
 
     # def select_multiple_keys(self,result_list_of_dicts = None, *keys):
@@ -163,9 +166,9 @@ class Task:
         d = {"name": self.name,
              "message": self.message,
              "author": str(self.author),
-             "creation_date": self.creation_date.isoformat(),
-             "start_date": self.start_date.isoformat(),
-             "end_date": self.end_date.isoformat(),
+             "creation_date": str(self.creation_date),
+             "start_date": str(self.start_date),
+             "end_date": str(self.end_date),
              "priority": self.priority
              }
         sub_tasks = dict()
@@ -184,7 +187,9 @@ class Task:
     @staticmethod
     def from_dict(j_dict,owner):
         t = Task(j_dict["name"], j_dict["message"], Author(j_dict["author"]), None)
-        t.creation_date = j_dict["creation_date"]
+        t.creation_date = dt.datetime.strptime(j_dict["creation_date"], "%Y-%m-%d %H:%M:%S.%f")
+        t.start_date = dt.datetime.strptime(j_dict["start_date"],"%Y-%m-%d %H:%M:%S.%f")
+        t.end_date =dt.datetime.strptime(j_dict["end_date"],"%Y-%m-%d %H:%M:%S.%f")
         t.priority = j_dict["priority"]
         # tags +++
         if owner is None:
@@ -203,7 +208,7 @@ class Task:
 
     @staticmethod
     def starts_next_five_minutes(task):
-        delta = task.start_date.time() - dt.datetime.now().time()
+        delta = task.start_date - dt.datetime.now()
         if dt.timedelta() <= delta <= dt.timedelta(minutes=5):
             return True
         return False
@@ -231,10 +236,32 @@ class Author:
 
 
 class Plan:
-    def __init__(self,task_template, repeat_time, continue_if_rejected = False):
-        self.template = task_template
-        self.next_time = repeat_time
+    def __init__(self, task_template, owner,  condition_checker=None,continue_if_rejected=False):
+        self.task_template = task_template
+        self.owner = owner
         self.continue_if_rejected = continue_if_rejected
+        self.condition_checker = condition_checker
+        self.condition = None
+
+
+    def set_Next(self):
+        if not self.condition_checker():
+            return False
+
+        task = copy.copy(self.task_template)
+        #check this
+        self.owner.add_subtask(task,[task.name])
+
+    def set_periodic(self,start_time, timedelta):
+        self.condition = {"type": "periodic", "timedelta":timedelta, "start": start_time}
+        self.task_template.start_date = start_time + timedelta
+
+
+
+
+
+
+
 
 
 
