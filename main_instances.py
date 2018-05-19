@@ -5,7 +5,15 @@
     """
 import datetime as dt
 from collections import OrderedDict
-import copy
+from enum import IntEnum
+from Priorities import Priority
+from filters import Filters
+
+
+class Status(IntEnum):
+    REJECTED = 0
+    ACTIVE = 1
+    COMPLETE = 2
 
 
 class Task:
@@ -33,10 +41,9 @@ class Task:
         self.start_date = start_date
         self.end_date = end_date
         #self.due_date = None
-        self.__priority = 3 # 1 <= priority <= 3
-        self.tags = list()
-        self._subtasks = OrderedDict()
-        self.done = False
+        self.__priority = Priority.LOW
+        self.tags = dict()
+        self._subtasks = TaskList
 
 
     def __str__(self):
@@ -47,7 +54,7 @@ class Task:
         line += "created: "+ str(self.creation_date)+"\n"
         line += "start_time: "+ str(self.start_date)+"\n"
         line += "end_time: " + str(self.end_date)+"\n"
-        #line += "remind_set: "+ str(self.remind_date)+"\n"
+        # line += "remind_set: "+ str(self.remind_date)+"\n"
         line += "priority: "+str(self.priority)+"\n"
         return line
 
@@ -91,9 +98,9 @@ class Task:
     @priority.setter
     def priority(self,val):
         val = int(val)
-        if val > 3:
+        if val > Priority.HIGH:
             self.__priority = 3
-        elif val < 1:
+        elif val < Priority.LOW:
             self.__priority = 1
         else:
             self.__priority = val
@@ -102,31 +109,48 @@ class Task:
 
     def add_subtask(self, task, path):
         if len(path) > 1:
-            self._subtasks.get(path[0]).add_subtask(task, path[1:])
+            self._subtasks.add_task(task,path[1:])
         else:
             task.owner = self
             self._subtasks[path[0]] = task
 
     def remove_subtask(self, path):
         if len(path) > 1:
-            self._subtasks.get(path[0]).remove_task(path[1:])
-        else:
-            self._subtasks.pop(path[0])
+            self._subtasks.remove_task(path[1:])
+
 
     def get_subtask(self, path):
-        task = self._subtasks.get(path[0])
-        if len(path) > 1:
-            return task.get_task(path[1:])
+        # if path is None:
+        #     raise WrongPathException
+        if path[0] == self.name:
+            return self
         else:
-            return task
+            return self._subtasks.get_task(path[1:])
+
 
     def sort_subtasks_by_priority(self):
-        self._subtasks = sorted(self._subtasks.items(),key=lambda k :(k[1].priority,k[0]))
+        self._subtasks = OrderedDict(sorted(self._subtasks.items(),key=lambda k :(k[1].priority,k[0])))
 
     def sort_all_levels_by_priority(self):
         self.sort_subtasks_by_priority()
         for each in self._subtasks:
             self._subtasks[each].sort_all_levels_by_priority()
+
+    def select_tasks_by_tags(self,tags_dict):
+        def selector(task):
+            task_tags = task.tags
+            for k,v in tags_dict.items:
+                if k in task_tags:
+                    if k == Filters.USER_TAGS:
+                        for i in v:
+                            if i not in task_tags[Filters.USER_TAGS]:
+                                return False
+                    else:
+                        if task_tags[k] != v:
+                            return False
+
+            return True
+        return self.select_subtasks(key=selector)
 
     def select_subtasks(self, key, result_dict=None):
         if result_dict is None:
@@ -150,17 +174,6 @@ class Task:
             v.select_next_5_minutes_tasks(result_dict)
         return result_dict
 
-    # def select_multiple_keys(self,result_list_of_dicts = None, *keys):
-    #     if len(keys) == 0 or keys is None:
-    #         return None
-    #     if result_list_of_dicts is None:
-    #         result_list_of_dicts = [OrderedDict*len(keys)]
-    #     for (k,v) in self._subtasks.items():
-    #         for i in range(len(keys)):
-    #             if keys[i](v):
-    #                 result_list_of_dicts[i][k] = v
-    #         v.select_multiple_keys(self, keys, result_list_of_dicts)
-    #     return result_list_of_dicts
 
     def to_json_dict(self):
         d = {"name": self.name,
@@ -235,30 +248,36 @@ class Author:
         return self.name
 
 
-class Plan:
-    def __init__(self, task_template, owner,  condition_checker=None,continue_if_rejected=False):
-        self.task_template = task_template
-        self.owner = owner
-        self.continue_if_rejected = continue_if_rejected
-        self.condition_checker = condition_checker
-        self.condition = None
 
+class TaskList:
+    def __init__(self,owner = None):
+        self.tasks = OrderedDict()
 
-    def set_Next(self):
-        if not self.condition_checker():
-            return False
+    def add_task(self,task,path):
+        if len(path) == 0:
+            self.tasks[task.name] = task
+            return
+        if len(path) > 0:
+            #check and raise WrongPath
+            self.tasks[path[0]].add_subtask(task,path[1:])
 
-        task = copy.copy(self.task_template)
-        #check this
-        self.owner.add_subtask(task,[task.name])
+    def remove_task(self,path):
+        if len(path) == 1:
+            self.tasks.pop(path)
+            return
+        if len(path) > 1:
+            #check and raise WrongPath
+            self.tasks[path[0]].remove_subtask(path[1:])
 
-    def set_periodic(self,start_time, timedelta):
-        self.condition = {"type": "periodic", "timedelta":timedelta, "start": start_time}
-        self.task_template.start_date = start_time + timedelta
+    def get_task(self,path):
+        if len(path) == 1:
+            return self.tasks[path[0]]
+        if len(path) > 1:
+            #check and raise WrongPath
+            return self.tasks[path[0]].get_subtask(path[1:])
 
-
-
-
+    def items(self):
+        return self.tasks.items()
 
 
 
