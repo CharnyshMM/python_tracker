@@ -7,7 +7,7 @@ import datetime as dt
 from collections import OrderedDict
 from enum import IntEnum
 from Priorities import Priority
-from filters import Filters
+from decorators import Filters
 
 
 class Status(IntEnum):
@@ -43,7 +43,7 @@ class Task:
         #self.due_date = None
         self.__priority = Priority.LOW
         self.tags = dict()
-        self._subtasks = TaskList
+        self.subtasks = TaskList(self)
 
 
     def __str__(self):
@@ -108,33 +108,25 @@ class Task:
 
 
     def add_subtask(self, task, path):
-        if len(path) > 1:
-            self._subtasks.add_task(task,path[1:])
-        else:
-            task.owner = self
-            self._subtasks[path[0]] = task
+        self.subtasks.add_task(task,path)
+
 
     def remove_subtask(self, path):
-        if len(path) > 1:
-            self._subtasks.remove_task(path[1:])
-
+        self.subtasks.remove_task(path)
 
     def get_subtask(self, path):
         # if path is None:
         #     raise WrongPathException
-        if path[0] == self.name:
-            return self
-        else:
-            return self._subtasks.get_task(path[1:])
+        self.subtasks.get_task(path)
 
 
     def sort_subtasks_by_priority(self):
-        self._subtasks = OrderedDict(sorted(self._subtasks.items(),key=lambda k :(k[1].priority,k[0])))
+        self.subtasks = OrderedDict(sorted(self.subtasks.items(), key=lambda k :(k[1].priority, k[0])))
 
     def sort_all_levels_by_priority(self):
         self.sort_subtasks_by_priority()
-        for each in self._subtasks:
-            self._subtasks[each].sort_all_levels_by_priority()
+        for each in self.subtasks:
+            self.subtasks[each].sort_all_levels_by_priority()
 
     def select_tasks_by_tags(self,tags_dict):
         def selector(task):
@@ -155,7 +147,7 @@ class Task:
     def select_subtasks(self, key, result_dict=None):
         if result_dict is None:
             result_dict = OrderedDict()
-        for (k,v) in self._subtasks.items():
+        for (k,v) in self.subtasks.items():
             if key(v):
                 result_dict[k] = v
             v.select_subtasks(key,result_dict)
@@ -164,7 +156,7 @@ class Task:
     def select_next_5_minutes_tasks(self, result_dict=None):
         if result_dict is None:
             result_dict = {"start": OrderedDict(), "continue": OrderedDict(), "end": OrderedDict()}
-        for (k,v) in self._subtasks.items():
+        for (k,v) in self.subtasks.items():
             if Task.starts_next_five_minutes(v):
                 result_dict["start"][k] = v
             if Task.ends_next_five_minutes(v):
@@ -185,7 +177,7 @@ class Task:
              "priority": self.priority
              }
         sub_tasks = dict()
-        for (k,v) in self._subtasks.items():
+        for (k,v) in self.subtasks.items():
             sub_tasks[k] = v.to_json_dict()
         d["subtasks"] = sub_tasks
         return d
@@ -252,9 +244,11 @@ class Author:
 class TaskList:
     def __init__(self,owner = None):
         self.tasks = OrderedDict()
+        self.owner = owner
 
     def add_task(self,task,path):
         if len(path) == 0:
+            task.owner = self.owner
             self.tasks[task.name] = task
             return
         if len(path) > 0:
@@ -279,9 +273,17 @@ class TaskList:
     def items(self):
         return self.tasks.items()
 
+    def sort_tasks_by_priority(self):
+        #check this
+        self.tasks = OrderedDict(sorted(self.tasks.items(), key=lambda k :(k[1].priority, k[0])))
 
+    def select_tasks(self,key,result_tasklist):
+        if result_tasklist is None:
+            result_tasklist = TaskList()
 
-
+        for (k,v) in self.tasks.items():
+            if key(v):
+                result_tasklist.add_task(v,[v.owner])
 
 
 

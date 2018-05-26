@@ -1,6 +1,6 @@
 from main_instances import *
 from time_manager import TimeManager
-from filters import Filters
+from decorators import Filters
 #import console_interactions as console
 #import datetime
 
