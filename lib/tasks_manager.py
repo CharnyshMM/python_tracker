@@ -1,7 +1,7 @@
-from task import *
-from tasks_collection import *
+from lib.task import *
+from lib.tasks_collection import *
 import datetime as dt
-from json_storage import JsonStorage
+from lib.json_storage import JsonStorage
 
 class TasksManager:
     def __init__(self,task_stor,user=None):

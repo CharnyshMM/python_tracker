@@ -1,4 +1,4 @@
-from task import *
+from lib.task import *
 
 class TasksCollection:
     def __init__(self, db_answer=None):

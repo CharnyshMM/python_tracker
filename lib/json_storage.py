@@ -1,7 +1,6 @@
 import json
-from task import *
 import datetime as dt
-from tasks_collection import *
+from lib.tasks_collection import *
 import uuid
 
 class JsonStorage:
@@ -26,6 +25,7 @@ class JsonStorage:
             j_dict[TaskAttributes.HAS_SUBTASKS] = [str(i)for i in j_dict[TaskAttributes.HAS_SUBTASKS]]
         if TaskAttributes.IS_SUBTASK_OF in j_dict:
             j_dict[TaskAttributes.IS_SUBTASK_OF] = str(j_dict[TaskAttributes.IS_SUBTASK_OF])
+
 
         # TODO:
         # same translation for plans

@@ -1,6 +1,7 @@
 from enum import Enum
 from uuid import uuid1
 
+
 class TaskAttributes(Enum):
     HAS_SUBTASKS = "has_subtasks"
     IS_SUBTASK_OF = "is_subtask_of"
@@ -9,43 +10,13 @@ class TaskAttributes(Enum):
     REMIND_TIME = "remind_time"
     END_TIME = "end_time"
     AUTHOR = "author"
-    CAN_READ = "can_read"
+    #CAN_READ = "can_read"
     CAN_EDIT = "can_edit"
     NAME = "name"
     MESSAGE = "message"
     STATUS = "status"
     PRIORITY = "priority"
     UID = "uid"
-
-
-    @classmethod
-    def attributes_equalty(cls, attr, val1, val2):
-        is_list_attr = (attr == cls.USER_TAGS or attr == cls.REMIND_TIME or
-                        attr == cls.CAN_EDIT or attr == cls.CAN_READ or attr == cls.HAS_SUBTASKS)
-        if is_list_attr:
-            if len(val1) != len(val2):
-                return False
-            for v1 in val1:
-                if v1 not in val2:
-                    return False
-        else:
-            if val1 != val2:
-                return False
-        return True
-
-    @classmethod
-    def includes_attributes(cls, attr, val_to_find, val_to_check):
-        #check length and raise Error if Zero
-        is_list_attr = (attr == cls.USER_TAGS or attr == cls.REMIND_TIME or
-                        attr == cls.CAN_EDIT or attr == cls.CAN_READ or attr == cls.HAS_SUBTASKS)
-        if is_list_attr:
-            for v1 in val_to_find:
-                if v1 not in val_to_check:
-                    return False
-        else:
-            if val_to_find != val_to_check:
-                return False
-        return True
 
 
 class TaskStatus(Enum):
@@ -63,9 +34,9 @@ class TaskNode:
             raise BaseException()
         if TaskAttributes.AUTHOR not in attributes_values:
                  # raise AttributesMissingException
-            print("No author")
             raise BaseException()
         self.attributes = attributes_values
+        self.attributes[TaskAttributes.CAN_EDIT] = [attributes_values[TaskAttributes.AUTHOR]]
         if TaskAttributes.UID not in attributes_values:
             self.attributes[TaskAttributes.UID] = uuid1()
 
@@ -97,16 +68,23 @@ class TaskNode:
             self.__unset_attribute(attr)
 
     def set_attribute(self,attr,val,user):
-        # check the user permissions
+        if user not in self.attributes[TaskAttributes.CAN_EDIT]:
+            raise PermissionError()
         self.__set_attribute(attr,val)
 
     def unset_attribute(self,attr,user):
+        if user not in self.attributes[TaskAttributes.CAN_EDIT]:
+            raise PermissionError()
         self.__unset_attribute(attr)
 
     def add_to_attribute(self,attr,val,user):
+        if user not in self.attributes[TaskAttributes.CAN_EDIT]:
+            raise PermissionError()
         self.__add_to_attribute(attr,val)
 
     def remove_from_attribute(self,attr,val, user):
+        if user not in self.attributes[TaskAttributes.CAN_EDIT]:
+            raise PermissionError()
         self.__remove_from_attribute(attr,val)
 
     def get_attribute(self,attr):
