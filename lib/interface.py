@@ -1,5 +1,5 @@
-from tasks_manager import *
-from decorators import *
+from lib.tasks_manager import *
+from lib.decorators import *
 
 
 class Interface:
@@ -24,7 +24,7 @@ class Interface:
             params_dict[TaskAttributes.IS_SUBTASK_OF] = owning_task
         if subtasks is not None:
             params_dict[TaskAttributes.HAS_SUBTASKS] = subtasks
-        cls.tasks_manager.create_new_task(TaskNode(params_dict))
+        cls.tasks_manager.create_new_task(Task(params_dict))
 
     @classmethod
     def remove_task(cls, task_id):

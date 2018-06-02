@@ -1,5 +1,3 @@
-
-
 def build_filter_function(search_keys_dict):
     def filter_function(task):
         for k,v in search_keys_dict.items():

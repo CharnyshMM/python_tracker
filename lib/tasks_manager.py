@@ -11,7 +11,6 @@ class TasksManager:
             self.tasks = TasksCollection()
 
     def create_new_task(self, new_task):
-
         if new_task.has_attribute(TaskAttributes.IS_SUBTASK_OF) :
             owners_id = new_task.attributes[TaskAttributes.IS_SUBTASK_OF]
             this_id = new_task.attributes[TaskAttributes.UID]

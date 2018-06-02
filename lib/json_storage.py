@@ -60,7 +60,7 @@ class JsonStorage:
         if TaskAttributes.IS_SUBTASK_OF in j_dict:
             j_dict[TaskAttributes.IS_SUBTASK_OF] = uuid.UUID(j_dict[TaskAttributes.IS_SUBTASK_OF])
 
-        return TaskNode(j_dict)
+        return Task(j_dict)
 
     @staticmethod
     def task_collection_to_json(collection):

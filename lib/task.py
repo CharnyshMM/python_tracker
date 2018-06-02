@@ -3,15 +3,14 @@ from uuid import uuid1
 
 
 class TaskAttributes(Enum):
-    HAS_SUBTASKS = "has_subtasks"
-    IS_SUBTASK_OF = "is_subtask_of"
-    USER_TAGS = "user_tags"
-    START_TIME = "start_time"
-    REMIND_TIME = "remind_time"
-    END_TIME = "end_time"
+    HAS_SUBTASKS = "subs"
+    IS_SUBTASK_OF = "in"
+    USER_TAGS = "tags"
+    START_TIME = "starts"
+    REMIND_TIME = "remind"
+    END_TIME = "ends"
     AUTHOR = "author"
-    #CAN_READ = "can_read"
-    CAN_EDIT = "can_edit"
+    EDITORS = "editors"
     NAME = "name"
     MESSAGE = "message"
     STATUS = "status"
@@ -26,17 +25,16 @@ class TaskStatus(Enum):
     REJECTED = "rejected"
 
 
-class TaskNode:
+class Task:
     def __init__(self, attributes_values):
 
         if TaskAttributes.NAME not in attributes_values:
-            print("No name")
             raise BaseException()
         if TaskAttributes.AUTHOR not in attributes_values:
                  # raise AttributesMissingException
             raise BaseException()
         self.attributes = attributes_values
-        self.attributes[TaskAttributes.CAN_EDIT] = [attributes_values[TaskAttributes.AUTHOR]]
+        self.attributes[TaskAttributes.EDITORS] = [attributes_values[TaskAttributes.AUTHOR]]
         if TaskAttributes.UID not in attributes_values:
             self.attributes[TaskAttributes.UID] = uuid1()
 
@@ -68,22 +66,22 @@ class TaskNode:
             self.__unset_attribute(attr)
 
     def set_attribute(self,attr,val,user):
-        if user not in self.attributes[TaskAttributes.CAN_EDIT]:
+        if user not in self.attributes[TaskAttributes.EDITORS]:
             raise PermissionError()
         self.__set_attribute(attr,val)
 
     def unset_attribute(self,attr,user):
-        if user not in self.attributes[TaskAttributes.CAN_EDIT]:
+        if user not in self.attributes[TaskAttributes.EDITORS]:
             raise PermissionError()
         self.__unset_attribute(attr)
 
     def add_to_attribute(self,attr,val,user):
-        if user not in self.attributes[TaskAttributes.CAN_EDIT]:
+        if user not in self.attributes[TaskAttributes.EDITORS]:
             raise PermissionError()
         self.__add_to_attribute(attr,val)
 
     def remove_from_attribute(self,attr,val, user):
-        if user not in self.attributes[TaskAttributes.CAN_EDIT]:
+        if user not in self.attributes[TaskAttributes.EDITORS]:
             raise PermissionError()
         self.__remove_from_attribute(attr,val)
 
