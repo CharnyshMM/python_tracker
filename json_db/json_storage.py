@@ -1,6 +1,6 @@
 import json
 import datetime as dt
-from lib.tasks_collection import *
+from lib.task import *
 import uuid
 
 
