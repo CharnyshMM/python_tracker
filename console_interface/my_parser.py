@@ -30,7 +30,18 @@ class FindCommandArguements:
 
 
 def parse_date(date_str):
-    return dt.datetime.strptime(date_str, "%d/%m/%y %H:%M")
+    try:
+        return dt.datetime.strptime(date_str, "%d/%m/%y_%H:%M")
+    except ValueError:
+        msg = "Not a valid date: '{0}'.".format(date_str)
+        raise argparse.ArgumentTypeError(msg)
+
+def parse_uuid(uuid_str):
+    try:
+        return uuid.UUID(uuid_str)
+    except ValueError:
+        msg = "Not a valid ID '{}'".format(uuid_str)
+        raise argparse.ArgumentTypeError(msg)
 
 
 def get_parser():
@@ -41,8 +52,8 @@ def get_parser():
     add_task_arguments(addtask_parser)
 
     rmtask_parser = subparsers.add_parser(ParserCommands.RMTASK, help='rmtask help')
-    rmtask_parser.add_argument(dest=TaskAttributes.UID, help="id of task to be removed")
-    rmtask_parser.add_argument('-f', action='store_true',dest=RemoveCommandArguments.F, help='forse remove with subtasks')
+    rmtask_parser.add_argument(dest=TaskAttributes.UID, type=parse_uuid, help="id of task to be removed")
+    rmtask_parser.add_argument('-f', action='store_true', dest=RemoveCommandArguments.F, help='forse remove with subtasks')
 
     modtask_parser = subparsers.add_parser('modtask', help='modify task info')
     modtask_parser.add_argument(dest=TaskAttributes.UID,help='id of task to be modified')
@@ -67,27 +78,11 @@ def add_task_arguments(parser):
                                                                         TaskStatus.COMPLITE,
                                                                         TaskStatus.ARCHIVED,
                                                                         TaskStatus.REJECTED])
-    parser.add_argument('-remind', dest=TaskAttributes.REMIND_DATES, nargs='*')
-    parser.add_argument('-ends', dest=TaskAttributes.END_DATE)
-    parser.add_argument('-parent',dest=TaskAttributes.OWNED_BY)
-    parser.add_argument('-subs', dest=TaskAttributes.SUBTASKS, nargs='*')
-    parser.add_argument('-tags', dest=TaskAttributes.TAGS, nargs='*')
+    parser.add_argument('-starts',dest=TaskAttributes.START_DATE, type=parse_date, help='%d/%m/%y_%H:%M devide with slashes and semicolon')
+
+    parser.add_argument('-remind', dest=TaskAttributes.REMIND_DATES, type=parse_date, nargs='*')
+    parser.add_argument('-ends', dest=TaskAttributes.END_DATE, type=parse_date)
+    parser.add_argument('-parent',dest=TaskAttributes.OWNED_BY, type=parse_uuid)
+    parser.add_argument('-subs', dest=TaskAttributes.SUBTASKS, type=parse_uuid, nargs='*')
+    parser.add_argument('-tags', dest=TaskAttributes.TAGS, type=parse_date, nargs='*')
     parser.add_argument('-editors', dest=TaskAttributes.CAN_EDIT, nargs='*')
-
-
-def normalise_result_dict(commands_dict):
-    if commands_dict.get(TaskAttributes.REMIND_DATES,None) is not None:
-        dates = commands_dict[TaskAttributes.REMIND_DATES]
-        commands_dict[TaskAttributes.REMIND_DATES] = [parse_date(d) for d in dates]
-    if commands_dict.get(TaskAttributes.END_DATE,None) is not None:
-        commands_dict[TaskAttributes.END_DATE] = parse_date(commands_dict[TaskAttributes.END_DATE])
-    if commands_dict.get(TaskAttributes.START_DATE,None) is not None:
-        commands_dict[TaskAttributes.START_DATE] = parse_date(commands_dict[TaskAttributes.START_DATE])
-    if commands_dict.get(TaskAttributes.SUBTASKS,None) is not None:
-        commands_dict[TaskAttributes.SUBTASKS] = [uuid.UUID(i) for i in commands_dict[TaskAttributes.SUBTASKS]]
-    if commands_dict.get(TaskAttributes.OWNED_BY,None) is not None:
-        commands_dict[TaskAttributes.OWNED_BY] = uuid.UUID(commands_dict[TaskAttributes.OWNED_BY])
-
-
-
-

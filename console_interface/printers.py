@@ -55,16 +55,24 @@ def hierarchy_list_printer(hierarchy_ids, task_dict, indents=0):
 
 
 def simple_actual_tasks_printer(starting, continuing, ending):
-    print(' ---- ACTUAL REPORT ----')
-    # starting_hierarchy = {}
-    # for k,v in starting.items():
-    #     if is_top_level_task(v,starting):
-    #         starting_hierarchy = (gather_subtasks(v,starting))
-    # hierarchy_list_printer(starting_hierarchy,starting)
+    print('========== ACTUAL REPORT ==========')
+    starting_hierarchy = {}
+    for k,v in starting.items():
+        if is_top_level_task(v,starting):
+            starting_hierarchy.update(gather_subtasks(v,starting))
+    print("=== STARTING TASKS ===")
+    hierarchy_list_printer(starting_hierarchy,starting)
 
-    ending_h = {}
+    continuing_hierarchy = {}
     for k,v in continuing.items():
         if is_top_level_task(v,continuing):
-            ending_h = (gather_subtasks(v,continuing))
-    hierarchy_list_printer(ending_h, continuing)
+            continuing_hierarchy.update(gather_subtasks(v,continuing))
+    print("\n=== CONTINUING TASKS ===")
+    hierarchy_list_printer(continuing_hierarchy, continuing)
 
+    ending_hierarchy = {}
+    for k,v in ending.items():
+        if is_top_level_task(v,ending):
+            ending_hierarchy.update(gather_subtasks(v,ending))
+    print("\n=== ENDING TAKS ===")
+    hierarchy_list_printer(ending_hierarchy, ending)

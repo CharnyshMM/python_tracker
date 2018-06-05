@@ -1,3 +1,4 @@
+#! /usr/bin/python3.5
 
 from console_interface.my_parser import *
 from lib.task import TaskAttributes, TaskStatus,TaskPriority,TaskPlanAttributes
@@ -13,12 +14,22 @@ def main(args):
     command_dict = vars(parser.parse_args(args.split(" ")))
     command = command_dict.pop(ParserCommands.COMMAND)
     if command == ParserCommands.ADDTASK:
-        normalise_result_dict(command_dict)
-        i.add_task(**command_dict)
+        try:
+            i.add_task(**command_dict)
+        except PermissionError as e:
+            print(print("! ADDTASK: Permission denied for user: {}".format(i.current_user)))
+
     elif command == ParserCommands.RMTASK:
-        id_str = command_dict[TaskAttributes.UID].replace('"', '')
-        id_str = id_str.replace("'",'')
-        i.remove_task(uuid.UUID(id_str))
+        try:
+            if command_dict[RemoveCommandArguments.F]:
+                i.remove_with_subtasks(command_dict[TaskAttributes.UID])
+            else:
+                i.remove_task(command_dict[TaskAttributes.UID])
+        except AttributeError:
+            print("! RMTASK: The task you're trying to delete has subtasks. Please remove them or use -f flag")
+        except PermissionError:
+            print("! RMTASK: Permission denied for user: {}".format(i.current_user))
+
     elif command == ParserCommands.FIND:
         tasks = list(i.find_tasks(**command_dict).values())
         for t in tasks:
