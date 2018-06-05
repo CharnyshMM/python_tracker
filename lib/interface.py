@@ -1,90 +1,88 @@
 from lib.tasks_manager import *
 from lib.decorators import *
-
+from lib.logger import *
+from json_db.interface import DB
 
 class Interface:
-    tasks_manager = None
+    def __init__(self, user):
+        configure_logger()
+        self.current_user = user
+        self.db = DB()
+        self.tasks_manager = TasksManager(self.db, user=user)
+        try:
+            self.tasks_manager.initialise_from_DB()
+        except Exception :
+            pass
 
-    @classmethod
-    def initialise(cls,user):
-        cls.tasks_manager = TasksManager(None, user=user)
-        cls.tasks_manager.initialise_from_DB()
+    @log_decorator
+    def add_task(self, title, start_date=None,
+                 end_date=None, remind_dates=None, status=None, owned_by=None, subtasks=None, tags=None, can_edit=None):
 
-    @classmethod
-    def add_task(cls, name, author, start_date=None,
-                 end_date=None, remind_dates=None, owning_task=None, subtasks=None):
-        params_dict = {TaskAttributes.NAME: name,TaskAttributes.AUTHOR: author}
-        if start_date is not None:
-            params_dict[TaskAttributes.START_TIME] = start_date
-        if end_date is not None:
-            params_dict[TaskAttributes.END_TIME] = end_date
-        if remind_dates is not None:
-            params_dict[TaskAttributes.REMIND_TIME] = remind_dates
-        if owning_task is not None:
-            params_dict[TaskAttributes.IS_SUBTASK_OF] = owning_task
-        if subtasks is not None:
-            params_dict[TaskAttributes.HAS_SUBTASKS] = subtasks
-        cls.tasks_manager.create_new_task(Task(params_dict))
+        t = Task(title,self.current_user,start_date=start_date,end_date=end_date,remind_dates=remind_dates,status=status,owned_by=owned_by,subtasks=subtasks,tags=tags,can_edit=can_edit)
+        self.tasks_manager.create_new_task(t)
+        self.tasks_manager.save_to_DB()
 
-    @classmethod
-    def remove_task(cls, task_id):
-        cls.tasks_manager.remove_task(task_id)
+    @log_decorator
+    def remove_task(self, task_id):
+        self.tasks_manager.remove_task(task_id)
+        self.tasks_manager.save_to_DB()
 
-    @classmethod
-    def get_task(cls, task_id):
-        return cls.tasks_manager.get_task(task_id)
+    @log_decorator
+    def get_task(self, task_id):
+        return self.tasks_manager.get_task(task_id)
 
-    @classmethod
-    def edit_task(cls, task_id, name=None, author=None, start_date=None,
-                  end_date=None, remind_dates=None, owning_task=None, subtasks=None, tags=None):
+    @log_decorator
+    def edit_task(self, task_id, title=None, author=None, start_date=None,
+                  end_date=None, remind_dates=None, owned_by=None, subtasks=None, tags=None, can_edit=None, status=None, ):
         params_dict = {}
-        if name is not None:
-            params_dict[TaskAttributes.NAME] = name
+        if title is not None:
+            params_dict[TaskAttributes.TITLE] = title
         if author is not None:
             params_dict[TaskAttributes.AUTHOR] = author
         if start_date is not None:
-            params_dict[TaskAttributes.START_TIME] = start_date
+            params_dict[TaskAttributes.START_DATE] = start_date
         if end_date is not None:
-            params_dict[TaskAttributes.END_TIME] = end_date
+            params_dict[TaskAttributes.END_DATE] = end_date
         if remind_dates is not None:
-            params_dict[TaskAttributes.REMIND_TIME] = remind_dates
-        if owning_task is not None:
-            params_dict[TaskAttributes.IS_SUBTASK_OF] = owning_task
+            params_dict[TaskAttributes.REMIND_DATES] = remind_dates
+        if owned_by is not None:
+            params_dict[TaskAttributes.OWNED_BY] = owned_by
         if subtasks is not None:
-            params_dict[TaskAttributes.HAS_SUBTASKS] = subtasks
+            params_dict[TaskAttributes.SUBTASKS] = subtasks
         if tags is not None:
-            params_dict[TaskAttributes.USER_TAGS] = tags
+            params_dict[TaskAttributes.TAGS] = tags
+        self.tasks_manager.edit_task(task_id, params_dict)
+        self.tasks_manager.save_to_DB()
 
-        cls.tasks_manager.edit_task(task_id, params_dict)
-
-    @classmethod
-    def find_tasks(cls, name=None, author=None, start_date=None,
-                  end_date=None, remind_dates=None, owning_task=None, subtasks=None, tags=None):
-        params_dict = {}
-        if name is not None:
-            params_dict[TaskAttributes.NAME] = name
+    @log_decorator
+    def find_tasks(self, title=None, author=None, start_date=None,
+                   end_date=None, remind_dates=None, owned_by=None, subtasks=None, tags=None, can_edit=None, status=None, ):
+        attributes = {}
+        if title is not None:
+            attributes[TaskAttributes.TITLE] = title
         if author is not None:
-            params_dict[TaskAttributes.AUTHOR] = author
+            attributes[TaskAttributes.AUTHOR] = author
         if start_date is not None:
-            params_dict[TaskAttributes.START_TIME] = start_date
+            attributes[TaskAttributes.START_DATE] = start_date
         if end_date is not None:
-            params_dict[TaskAttributes.END_TIME] = end_date
+            attributes[TaskAttributes.END_DATE] = end_date
         if remind_dates is not None:
-            params_dict[TaskAttributes.REMIND_TIME] = remind_dates
-        if owning_task is not None:
-            params_dict[TaskAttributes.IS_SUBTASK_OF] = owning_task
+            attributes[TaskAttributes.REMIND_DATES] = remind_dates
+        if owned_by is not None:
+            attributes[TaskAttributes.OWNED_BY] = owned_by
         if subtasks is not None:
-            params_dict[TaskAttributes.HAS_SUBTASKS] = subtasks
+            attributes[TaskAttributes.SUBTASKS] = subtasks
         if tags is not None:
-            params_dict[TaskAttributes.USER_TAGS] = tags
+            attributes[TaskAttributes.TAGS] = tags
+        return self.tasks_manager.find_task(attributes)
 
-        return cls.tasks_manager.tasks.select_tasks_by_key(build_filter_function(params_dict))
+    @log_decorator
+    def get_all_tasks(self):
+        return self.tasks_manager.get_all_tasks()
 
-    @classmethod
-    def get_all_tasks(cls):
-        return cls.tasks_manager.tasks.get_all_tasks()
-
-    @classmethod
-    def check_time(cls):
-        pass
+    @log_decorator
+    def check_time(self, date,delta=None):
+        reminders = self.tasks_manager.select_actual_reminders(date,delta)
+        actual_tasks = self.tasks_manager.select_actual_tasks(date,delta)
+        return (actual_tasks,reminders)
 

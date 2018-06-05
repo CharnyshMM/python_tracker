@@ -1,14 +1,13 @@
-def build_filter_function(search_keys_dict):
+def key_function_builder(search_keys_dict):
     def filter_function(task):
         for k,v in search_keys_dict.items():
             attr_val = task.try_get_attribute(k)
             if attr_val is None:
                 return False
-            if isinstance(v,list):
+            if isinstance(v, list):
                 for item in v:
-                    if v not in attr_val:
+                    if item not in attr_val:
                         return False
-
             elif attr_val != v:
                 return False
         return True

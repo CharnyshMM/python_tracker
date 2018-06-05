@@ -1,12 +1,12 @@
 import datetime
 from uuid import uuid1
-from lib.exceptions import *
+
 
 
 class TaskAttributes:
-    SUBTASKS = "subtasks"  # mult
+    SUBTASKS = "subtasks"  # mult []
     OWNED_BY = "owned_by"
-    TAGS = "tags"          #mult
+    TAGS = "tags"          # mult []
     START_DATE = "start_date"
     REMIND_DATES = "remind_dates" # mult
     END_DATE = "end_date"
@@ -27,23 +27,22 @@ class TaskStatus:
     REJECTED = "rejected"
 
 
-class PlanAttributes:
+class TaskPlanAttributes:
     EVERYDAY = "everyday"
     EVERYWEEK = "everyweek"
     EVERYMONTH = "everymonth"
     EVERYYEAR = "everyyear"
 
 
-class Priority:
+class TaskPriority:
     HIGH = 1
     MEDIUM = 2
     LOW = 3
 
 
-
 class Task:
-    def __init__(self,title, author, message=None, start_date=None, remind_dates=None,
-                 end_date=None, status=TaskStatus.ACTIVE, priority=Priority.LOW, owned_by=None, subtasks=None, plans=None, can_edit=None, tags=None):
+    def __init__(self, title, author, message=None, uid=None, start_date=None, remind_dates=None,
+                 end_date=None, status=TaskStatus.ACTIVE, priority=TaskPriority.LOW, owned_by=None, subtasks=None, plans=None, can_edit=None, tags=None):
         self.attributes = {TaskAttributes.TITLE: title,
                            TaskAttributes.AUTHOR: author,
                            TaskAttributes.STATUS: status,
@@ -64,8 +63,17 @@ class Task:
         if tags is not None:
             self.__set_attribute(TaskAttributes.TAGS, tags)
 
-        self.__set_attribute(TaskAttributes.CAN_EDIT,[author])
-        self.attributes[TaskAttributes.UID] = uuid1()
+        if can_edit is not None:
+            self.attributes[TaskAttributes.CAN_EDIT] = can_edit
+            if author not in can_edit:
+                self.__add_to_list_attribute(TaskAttributes.CAN_EDIT,can_edit)
+        else:
+            self.__set_attribute(TaskAttributes.CAN_EDIT, [author])
+
+        if uid is None:
+            self.attributes[TaskAttributes.UID] = uuid1()
+        else:
+            self.attributes[TaskAttributes.UID] = uid
 
     def __set_attribute(self, attr, val):
         if attr not in [TaskAttributes.SUBTASKS,
@@ -82,6 +90,8 @@ class Task:
                 self.attributes[attr] = [val]
 
     def __add_to_list_attribute(self, attr, val):
+        if attr not in self.attributes:
+            self.attributes[attr] = []
         if isinstance(val, list):
             self.attributes[attr] += val
         else:
@@ -130,4 +140,7 @@ class Task:
     def has_attribute(self, attr):
         return attr in self.attributes
 
-
+    def __str__(self):
+        title = self.attributes[TaskAttributes.TITLE]
+        uid = self.attributes[TaskAttributes.UID]
+        return title + " " + uid
