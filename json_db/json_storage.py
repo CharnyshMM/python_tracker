@@ -43,9 +43,9 @@ class JsonStorage:
         return Task(**j_dict)
 
     @staticmethod
-    def task_collection_to_json(collection):
+    def task_collection_to_json(tasks_dict):
         j_collection = dict()
-        for k,v in collection.tasks.items():
+        for k,v in tasks_dict.items():
             j_collection[str(k)] = JsonStorage.task_to_json(v)
         return j_collection
 
@@ -54,7 +54,7 @@ class JsonStorage:
         final_dict = {}
         for k,v in j_dict.items():
             final_dict[uuid.UUID(k)] = JsonStorage.task_from_json(v)
-        return TasksCollection(final_dict)
+        return final_dict
 
     def read_string(self):
         contents = ""
