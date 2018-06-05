@@ -28,6 +28,11 @@ class Interface:
         self.tasks_manager.save_to_DB()
 
     @log_decorator
+    def remove_with_subtasks(self,task_id):
+        self.tasks_manager.remove_with_subtasks(task_id)
+        self.tasks_manager.save_to_DB()
+
+    @log_decorator
     def get_task(self, task_id):
         return self.tasks_manager.get_task(task_id)
 

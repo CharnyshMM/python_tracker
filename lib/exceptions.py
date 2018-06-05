@@ -7,4 +7,8 @@ class AttributeMissingError (AttributeError):
         return 'AttributeMissingError '+str(self.attribute)
 
 
+class SubtasksNotRemovedError(AttributeError):
+    def __init__(self,message):
+        super().__init__(message)
+
 

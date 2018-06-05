@@ -2,7 +2,7 @@ from lib.task import *
 import datetime as dt
 from lib.logger import *
 from lib.decorators import key_function_builder
-
+from lib.exceptions import *
 
 class TasksManager:
     @log_decorator
@@ -32,15 +32,27 @@ class TasksManager:
         # try catch block needed
         task = self.tasks[task_id]
         if task.has_attribute(TaskAttributes.SUBTASKS):
-            raise BaseException("task has subtasks, can't be removed")
+            raise SubtasksNotRemovedError(task_id)
 
         if task.has_attribute(TaskAttributes.OWNED_BY):
-            owner_id = task.get_arribute(TaskAttributes.OWNED_BY)
-            self.tasks[owner_id].remove_from_attribute(task_id, self.current_user)
+            owner_id = task.get_attribute(TaskAttributes.OWNED_BY)
+            self.tasks[owner_id].remove_from_attribute(TaskAttributes.SUBTASKS, task_id, self.current_user)
+        elif self.current_user not in task.get_attribute(TaskAttributes.CAN_EDIT):
+            raise PermissionError("Deleting permitted for user '{}'".format(self.current_user))
             # self.tasks.find_and_remove_from_attribute(owner_id, TaskAttributes.SUBTASKS, task_id, self.current_user)
         # TODO: check user permissions
 
         self.tasks.pop(task_id)
+
+    @log_decorator
+    def remove_with_subtasks(self,task_id):
+        task = self.tasks[task_id]
+        subtasks = task.try_get_attribute(TaskAttributes.SUBTASKS)
+        if subtasks is not None:
+            for sub_id in subtasks:
+                self.remove_with_subtasks(sub_id)
+        self.remove_task(task.get_attribute(TaskAttributes.UID))
+
 
     @log_decorator
     def find_task(self, attributes):
@@ -95,7 +107,8 @@ class TasksManager:
                     result_dict['starting'][k] = v
             end_date = v.try_get_attribute(TaskAttributes.END_DATE)
             if end_date is None:
-                result_dict['continuing'][k] = v
+                if k not in result_dict['starting']:
+                    result_dict['continuing'][k] = v
             else:
                 end_delta = end_date - date
                 if end_delta >= dt.timedelta(0):
