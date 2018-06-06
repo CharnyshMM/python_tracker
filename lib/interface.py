@@ -1,5 +1,7 @@
 from lib.tasks_manager import *
-from lib.decorators import *
+from lib.plans_manager import *
+from lib.plan import *
+from lib.plans_manager import PlansManager
 from lib.logger import *
 from json_db.interface import DB
 
@@ -9,9 +11,10 @@ class Interface:
         self.current_user = user
         self.db = DB()
         self.tasks_manager = TasksManager(self.db, user=user)
+        self.plans_manager = PlansManager(self.db.get_all_plans())
         try:
-            self.tasks_manager.initialise_from_DB()
-        except Exception :
+            self.tasks_manager.initialise_from_db()
+        except Exception:
             pass
 
     @log_decorator
@@ -20,17 +23,17 @@ class Interface:
 
         t = Task(title,self.current_user,start_date=start_date,end_date=end_date,remind_dates=remind_dates,status=status,owned_by=owned_by,subtasks=subtasks,tags=tags,can_edit=can_edit)
         self.tasks_manager.create_new_task(t)
-        self.tasks_manager.save_to_DB()
+        self.tasks_manager.save_to_db()
 
     @log_decorator
     def remove_task(self, task_id):
         self.tasks_manager.remove_task(task_id)
-        self.tasks_manager.save_to_DB()
+        self.tasks_manager.save_to_db()
 
     @log_decorator
     def remove_with_subtasks(self,task_id):
         self.tasks_manager.remove_with_subtasks(task_id)
-        self.tasks_manager.save_to_DB()
+        self.tasks_manager.save_to_db()
 
     @log_decorator
     def get_task(self, task_id):
@@ -57,7 +60,7 @@ class Interface:
         if tags is not None:
             params_dict[TaskAttributes.TAGS] = tags
         self.tasks_manager.edit_task(task_id, params_dict)
-        self.tasks_manager.save_to_DB()
+        self.tasks_manager.save_to_db()
 
     @log_decorator
     def find_tasks(self, title=None, author=None, start_date=None,
@@ -87,7 +90,19 @@ class Interface:
 
     @log_decorator
     def check_time(self, date,delta=None):
+        self.check_plans()
         reminders = self.tasks_manager.select_actual_reminders(date,delta)
         actual_tasks = self.tasks_manager.select_actual_tasks(date,delta)
         return (actual_tasks,reminders)
 
+    def add_periodic_plan(self,period, task_template, task_id, end_date):
+        plan = PeriodicPlan(period,task_template,task_id, self.current_user,end_date=end_date)
+        self.plans_manager.add_plan(plan)
+        self.check_plans()
+
+    def check_plans(self):
+        new_tasks = self.plans_manager.get_updates()
+        for task in new_tasks:
+            self.tasks_manager.create_new_task(task)
+        self.tasks_manager.save_to_db()
+        self.db.put_all_plans(self.plans_manager.plans)

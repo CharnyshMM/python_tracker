@@ -1,6 +1,6 @@
 import datetime
 from uuid import uuid1
-
+import copy
 
 
 class TaskAttributes:
@@ -25,13 +25,6 @@ class TaskStatus:
     ACTIVE = "active"
     COMPLITE = "complete"
     REJECTED = "rejected"
-
-
-class TaskPlanAttributes:
-    EVERYDAY = "everyday"
-    EVERYWEEK = "everyweek"
-    EVERYMONTH = "everymonth"
-    EVERYYEAR = "everyyear"
 
 
 class TaskPriority:
@@ -143,4 +136,14 @@ class Task:
     def __str__(self):
         title = self.attributes[TaskAttributes.TITLE]
         uid = self.attributes[TaskAttributes.UID]
-        return title + " " + uid
+        return title + " " + str(uid)
+
+    def __copy__(self):
+        result_copy = {}
+        for k,v in self.attributes.items():
+            if isinstance(v,list):
+                inner_copy = [copy.copy(x) for x in v]
+                result_copy[k] = inner_copy
+            else:
+                result_copy[k] = copy.copy(v)
+        return Task(**result_copy)

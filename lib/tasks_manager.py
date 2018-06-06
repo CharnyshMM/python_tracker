@@ -13,23 +13,23 @@ class TasksManager:
 
     @log_decorator
     def create_new_task(self, new_task):
+        self.__create_new_task(new_task,self.current_user)
+
+    @log_decorator
+    def __create_new_task(self,new_task, user):
         if new_task.has_attribute(TaskAttributes.OWNED_BY):
             owners_id = new_task.attributes[TaskAttributes.OWNED_BY]
             this_id = new_task.attributes[TaskAttributes.UID]
-            self.tasks[owners_id].add_to_attribute(TaskAttributes.SUBTASKS,this_id,self.current_user)
-            # self.tasks.find_and_add_to_attribute(owners_id, TaskAttributes.SUBTASKS, this_id, self.current_user)
+            self.tasks[owners_id].add_to_attribute(TaskAttributes.SUBTASKS,this_id,user)
 
         if new_task.has_attribute(TaskAttributes.SUBTASKS):
             this_id = new_task.attributes[TaskAttributes.UID]
             for sub_id in new_task.attributes[TaskAttributes.SUBTASKS]:
-                self.tasks[sub_id].set_attribute(TaskAttributes.OWNED_BY,this_id,self.current_user,self.current_user)
-                #self.tasks.find_and_set_attribute(sub_id, TaskAttributes.OWNED_BY, this_id, self.current_user)
+                self.tasks[sub_id].set_attribute(TaskAttributes.OWNED_BY,this_id,user)
         self.tasks[new_task.get_attribute(TaskAttributes.UID)] = new_task
 
     @log_decorator
     def remove_task(self, task_id):
-        # TODO:
-        # try catch block needed
         task = self.tasks[task_id]
         if task.has_attribute(TaskAttributes.SUBTASKS):
             raise SubtasksNotRemovedError(task_id)
@@ -39,9 +39,6 @@ class TasksManager:
             self.tasks[owner_id].remove_from_attribute(TaskAttributes.SUBTASKS, task_id, self.current_user)
         elif self.current_user not in task.get_attribute(TaskAttributes.CAN_EDIT):
             raise PermissionError("Deleting permitted for user '{}'".format(self.current_user))
-            # self.tasks.find_and_remove_from_attribute(owner_id, TaskAttributes.SUBTASKS, task_id, self.current_user)
-        # TODO: check user permissions
-
         self.tasks.pop(task_id)
 
     @log_decorator
@@ -81,18 +78,13 @@ class TasksManager:
         if not isinstance(status,TaskStatus):
             raise TypeError()
         self.tasks[task_id].set_attribute(TaskAttributes.STATUS,self.current_user)
-        #self.tasks.find_and_set_attribute(task_id, TaskAttributes.STATUS, status,self.current_user)
-
-    # @log_decorator
-    # def get_today_taskslist(self):
-    #     return self.tasks
 
     @log_decorator
-    def initialise_from_DB(self):
+    def initialise_from_db(self):
         self.tasks = self.storage.get_all_tasks()
 
     @log_decorator
-    def save_to_DB(self):
+    def save_to_db(self):
         self.storage.put_all_tasks(self.tasks)
 
     def select_actual_tasks(self, date, delta=None):
