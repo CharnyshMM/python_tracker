@@ -1,7 +1,7 @@
 #! /usr/bin/python3.5
 
 from console_interface.my_parser import *
-from lib.task import TaskAttributes, TaskStatus,TaskPriority,TaskPlanAttributes
+from lib.task import TaskAttributes, TaskStatus,TaskPriority
 from lib.interface import Interface
 import console_interface.printers as printers
 import uuid
@@ -34,6 +34,7 @@ def main(args):
         tasks = list(i.find_tasks(**command_dict).values())
         for t in tasks:
             printers.simple_task_printer(t)
+
     elif command == ParserCommands.CHECK:
         if command_dict[CheckCommandArguments.DATE] is not None:
             date = parse_date(command_dict[CheckCommandArguments.DATE])
@@ -42,8 +43,25 @@ def main(args):
         actual_tasks, reminders = i.check_time(date)
         for each in reminders:
             printers.simple_reminder_printer(each)
-
         printers.simple_actual_tasks_printer(**actual_tasks)
+
+    elif command == ParserCommands.ADDPLAN:
+        period = command_dict[PlanCommandArguments.PERIOD]
+        period = dt.timedelta(minutes=period)
+        end_date = command_dict[PlanCommandArguments.FINISH]
+        task_id = command_dict[PlanCommandArguments.TASK_ID]
+        task_template = i.get_task(task_id)
+        i.add_periodic_plan(period,task_template,task_id,end_date)
+        i.check_plans()
+
+    elif command == ParserCommands.PRINT:
+        if command_dict[PrintCommandArguments.ID]:
+            task = i.get_task(command_dict[PrintCommandArguments.ID])
+            printers.simple_task_printer(task,attributes=command_dict)
+        else:
+            tasks_d = i.tasks_manager.tasks
+            printers.hierarchy_printer(tasks_d)
+
 
 if __name__ == '__main__':
     main(input())
