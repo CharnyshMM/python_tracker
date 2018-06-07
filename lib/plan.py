@@ -4,6 +4,10 @@ from lib.task import TaskAttributes
 from uuid import uuid1
 
 
+class TimeValueError(ValueError):
+    pass
+
+
 class PeriodicPlanAttributes:
     PERIOD = 'period'
     END_DATE = 'end_date'
@@ -13,11 +17,13 @@ class PeriodicPlanAttributes:
     USER = 'user'
     LAST_UPDATE_TIME = 'last_update_time'
 
+
 class PeriodicPlan:
     def __init__(self, period, task_template, task_id, user, uid=None, end_date=None, last_update_time = None):
         self.period = period
         self.task_template = copy.copy(task_template)
-
+        if self.task_template.try_get_attribute(TaskAttributes.START_DATE) is None:
+            raise ValueError
         self.task_id = task_id
         self.user = user
         if uid is not None:
@@ -36,7 +42,8 @@ class PeriodicPlan:
         new_task = copy.copy(self.task_template)
 
         start_date += self.period
-        end_date += self.period
+        if end_date is not None:
+            end_date += self.period
 
         if remind_dates is not None:
             for i in range(len(remind_dates)):
