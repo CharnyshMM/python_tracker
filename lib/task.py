@@ -17,7 +17,7 @@ class TaskAttributes:
     STATUS = "status"
     PRIORITY = "priority"
     UID = "uid"
-    PLANS = "plans"           # mult
+    PLAN = "plan"           # mult
 
 
 class TaskStatus:
@@ -35,7 +35,7 @@ class TaskPriority:
 
 class Task:
     def __init__(self, title, author, message=None, uid=None, start_date=None, remind_dates=None,
-                 end_date=None, status=TaskStatus.ACTIVE, priority=TaskPriority.LOW, owned_by=None, subtasks=None, plans=None, can_edit=None, tags=None):
+                 end_date=None, status=TaskStatus.ACTIVE, priority=TaskPriority.LOW, owned_by=None, subtasks=None, plan=None, can_edit=None, tags=None):
         self.attributes = {TaskAttributes.TITLE: title,
                            TaskAttributes.AUTHOR: author,
                            TaskAttributes.STATUS: status,
@@ -51,8 +51,8 @@ class Task:
             self.__set_attribute(TaskAttributes.OWNED_BY,owned_by)
         if subtasks is not None:
             self.__set_attribute(TaskAttributes.SUBTASKS, subtasks)
-        if plans is not None:
-            self.__set_attribute(TaskAttributes.PLANS, plans)
+        if plan is not None:
+            self.__set_attribute(TaskAttributes.PLAN, plan)
         if tags is not None:
             self.__set_attribute(TaskAttributes.TAGS, tags)
 
@@ -71,7 +71,6 @@ class Task:
     def __set_attribute(self, attr, val):
         if attr not in [TaskAttributes.SUBTASKS,
                         TaskAttributes.REMIND_DATES,
-                        TaskAttributes.PLANS,
                         TaskAttributes.TAGS,
                         TaskAttributes.CAN_EDIT
                         ]:

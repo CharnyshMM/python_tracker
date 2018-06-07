@@ -46,13 +46,17 @@ def main(args):
         printers.simple_actual_tasks_printer(**actual_tasks)
 
     elif command == ParserCommands.ADDPLAN:
-        period = command_dict[PlanCommandArguments.PERIOD]
+        period = command_dict[AddPlanCommandArguments.PERIOD]
         period = dt.timedelta(minutes=period)
-        end_date = command_dict[PlanCommandArguments.FINISH]
-        task_id = command_dict[PlanCommandArguments.TASK_ID]
+        end_date = command_dict[AddPlanCommandArguments.FINISH]
+        task_id = command_dict[AddPlanCommandArguments.TASK_ID]
         task_template = i.get_task(task_id)
         i.add_periodic_plan(period,task_template,task_id,end_date)
         i.check_plans()
+
+    elif command == ParserCommands.RMPLAN:
+        plan_id = command_dict[RemovePlanCommandArguments.TASK_ID]
+        i.rm_periodic_plan(plan_id)
 
     elif command == ParserCommands.PRINT:
         if command_dict[PrintCommandArguments.ID]:

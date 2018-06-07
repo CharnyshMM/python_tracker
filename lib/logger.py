@@ -1,6 +1,7 @@
 import logging
+from functools import wraps
+import lib.log_config as log_config
 
-DEFAULT_LOGFILE = '../root_logger.txt'
 
 logger = None
 
@@ -12,10 +13,12 @@ def get_logger():
     return logger
 
 
-def configure_logger(log_file=None, level=logging.DEBUG):
+def configure_logger(log_file=None, level=None):
     global logger
     if log_file is None:
-        log_file = DEFAULT_LOGFILE
+        log_file = log_config.DEFAULT_LOGFILE
+    if level is None:
+        level = log_config.DEFAULT_LEVEL
     logging.basicConfig(filename=log_file, level=level)
     if logger is None:
         logger = get_logger()
@@ -25,10 +28,13 @@ def configure_logger(log_file=None, level=logging.DEBUG):
 
 def log_decorator(f):
     global logger
+    if logger is None:
+        get_logger()
+    @wraps(f)
     def do_log(*args,**kwargs):
         try:
             logger.debug('Called:  ' + f.__name__)
-            logger.debug('Args:  ' + str(args) + ' Kwargs: ' + str(kwargs))
+            logger.debug('Args:  ' + str(args) + '\nKwargs: ' + str(kwargs))
             result = f(*args,**kwargs)
             logger.debug('Return:  ' + f.__name__ + ' => ' + str(result))
             return result

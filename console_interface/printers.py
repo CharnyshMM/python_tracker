@@ -23,9 +23,11 @@ def simple_task_printer(task, attributes = None,indents=0):
             print(ind_str + 'TAGS: {}'.format(task.try_get_attribute(TaskAttributes.TAGS)))
         if attributes[PrintCommandArguments.PRINT_USERS]:
             print(ind_str + 'USERS: {} can make changes here'.format(task.try_get_attribute(TaskAttributes.CAN_EDIT)))
+        if attributes[PrintCommandArguments.PRINT_PLAN]:
+            print(ind_str + 'PLAN ID: {} '.format(task.try_get_attribute(TaskAttributes.PLAN)))
 
 def simple_reminder_printer(task):
-    print("---- REMINDER ----")
+    print("\n---- REMINDER ----")
     print('= {}'.format(task.get_attribute(TaskAttributes.TITLE)))
     print('TAGS {}'.format(task.try_get_attribute(TaskAttributes.TAGS)))
 

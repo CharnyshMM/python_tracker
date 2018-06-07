@@ -2,7 +2,7 @@ from lib.task import TaskAttributes,TaskPriority,TaskStatus
 import argparse
 import uuid
 import datetime as dt
-import re
+from lib.plan import PeriodicPlanAttributes
 
 
 class ParserCommands:
@@ -12,6 +12,7 @@ class ParserCommands:
     CHECK = 'check'
     FIND = 'find'
     ADDPLAN = 'addplan'
+    RMPLAN = 'rmplan'
     PRINT = 'print'
 
 class RemoveCommandArguments:
@@ -31,17 +32,22 @@ class FindCommandArguments:
     ID = 'uid'
     TITLE = 'title'
 
-class PlanCommandArguments:
+class AddPlanCommandArguments:
     TASK_ID = 'task_id'
     PERIOD = 'period'
     FINISH = 'finish'
+
+class RemovePlanCommandArguments:
+    TASK_ID = 'task_id'
+    REMOVE_WITH_TASKS = 'r'
+
 
 class PrintCommandArguments:
     PRINT_DATES = 'print_dates'
     ID = 'id'
     PRINT_TAGS = 'print_tags'
     PRINT_USERS = 'print_users'
-    PRINT_PLANS = 'print_plans'
+    PRINT_PLAN = 'print_plan'
 
 
 
@@ -78,6 +84,11 @@ def get_parser():
     rmtask_parser.add_argument(dest=TaskAttributes.UID, type=parse_uuid, help="id of task to be removed")
     rmtask_parser.add_argument('-f', action='store_true', dest=RemoveCommandArguments.F, help='forse remove with subtasks')
 
+    rmplan_parser = subparsers.add_parser('rmplan', help='rmplan')
+    rmplan_parser.add_argument(dest=PeriodicPlanAttributes.TASK_ID, type=parse_uuid,help='id of task plan is applied to')
+    rmplan_parser.add_argument('-r',dest=RemovePlanCommandArguments.REMOVE_WITH_TASKS, action='store_true',
+                               help='remove also all the tasks that were created by this plan') # not implemented
+
     modtask_parser = subparsers.add_parser('modtask', help='modify task info')
     modtask_parser.add_argument(dest=TaskAttributes.UID,help='id of task to be modified')
     modtask_parser.add_argument('-title', type=str, dest=TaskAttributes.TITLE, help='title of task')
@@ -91,7 +102,7 @@ def get_parser():
     print_parser.add_argument('-d', '--dates', dest=PrintCommandArguments.PRINT_DATES, action='store_true')
     print_parser.add_argument('-t', '--tags', dest=PrintCommandArguments.PRINT_TAGS, action='store_true')
     print_parser.add_argument('-u', '--users', dest=PrintCommandArguments.PRINT_USERS, action='store_true')
-    print_parser.add_argument('-p','--plans',dest=PrintCommandArguments.PRINT_PLANS, action='store_true')
+    print_parser.add_argument('-p','--plan', dest=PrintCommandArguments.PRINT_PLAN, action='store_true')
 
     addplan_parser = subparsers.add_parser(ParserCommands.ADDPLAN, help='add plan help')
     addplan_parser.add_argument('period', type=parse_period)

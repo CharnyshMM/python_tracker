@@ -16,13 +16,15 @@ class PeriodicPlanAttributes:
 class PeriodicPlan:
     def __init__(self, period, task_template, task_id, user, uid=None, end_date=None, last_update_time = None):
         self.period = period
-        self.task_template = task_template
+        self.task_template = copy.copy(task_template)
+
         self.task_id = task_id
         self.user = user
         if uid is not None:
             self.uid = uid
         else:
             self.uid = uuid1()
+        self.task_template.set_attribute(TaskAttributes.PLAN, self.uid, user)
         self.end_date = end_date
         self.last_update_time = last_update_time
 
@@ -52,6 +54,9 @@ class PeriodicPlan:
     def periodic_update_needed(self):
         if self.last_update_time is None:
             return True
+        if self.end_date is not None:
+            if dt.datetime.now() > self.end_date:
+                return False
         delta = dt.datetime.now() - self.last_update_time
         if delta >= self.period:
             return True

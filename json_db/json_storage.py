@@ -25,6 +25,8 @@ class JsonStorage:
             j_dict[TaskAttributes.SUBTASKS] = [str(i) for i in j_dict[TaskAttributes.SUBTASKS]]
         if TaskAttributes.OWNED_BY in j_dict:
             j_dict[TaskAttributes.OWNED_BY] = str(j_dict[TaskAttributes.OWNED_BY])
+        if TaskAttributes.PLAN in j_dict:
+            j_dict[TaskAttributes.PLAN] = str(j_dict[TaskAttributes.PLAN])
         return j_dict
 
     @staticmethod
@@ -41,6 +43,8 @@ class JsonStorage:
             j_dict[TaskAttributes.SUBTASKS] = [uuid.UUID(i) for i in j_dict[TaskAttributes.SUBTASKS]]
         if TaskAttributes.OWNED_BY in j_dict:
             j_dict[TaskAttributes.OWNED_BY] = uuid.UUID(j_dict[TaskAttributes.OWNED_BY])
+        if TaskAttributes.PLAN in j_dict:
+            j_dict[TaskAttributes.PLAN] = uuid.UUID(j_dict[TaskAttributes.PLAN])
         return Task(**j_dict)
 
     @staticmethod
