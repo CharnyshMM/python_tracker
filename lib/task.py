@@ -69,6 +69,8 @@ class Task:
             self.attributes[TaskAttributes.UID] = uid
 
     def __set_attribute(self, attr, val):
+        if val is None:
+            return
         if attr not in [TaskAttributes.SUBTASKS,
                         TaskAttributes.REMIND_DATES,
                         TaskAttributes.TAGS,
