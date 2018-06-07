@@ -70,7 +70,7 @@ class TasksManager:
     def edit_task(self,task_id,edited_task, user):
         # TODO:
         # add try catch
-        self.remove_task(task_id)
+        self.remove_task(task_id,user)
         edited_task.set_attribute(TaskAttributes.UID,task_id, user)
         self.create_new_task(edited_task)
 
@@ -126,31 +126,3 @@ class TasksManager:
                 result_dict[k] = v
 
         return result_dict
-
-    # @staticmethod
-    # @log_decorator
-    # def has_reminder(task,date):
-    #     reminders = task.try_get_attribute(TaskAttributes.REMIND_DATES)
-    #     if reminders is None:
-    #         return False
-    #     for reminder in reminders:
-    #         if reminder.date() == date.date():
-    #             return True
-    #     return False
-    #
-    # @staticmethod
-    # @log_decorator
-    # def has_subtasks(task):
-    #     val = task.try_get_attribute(TaskAttributes.SUBTASKS)
-    #     if val is not None and len(val) > 0:
-    #         return True
-    #     return False
-    #
-    # @staticmethod
-    # @log_decorator
-    # def is_top_level_task(task):
-    #     val = task.try_get_attribute(TaskAttributes.OWNED_BY)
-    #     if val is None:
-    #         return True
-    #     return False
-
