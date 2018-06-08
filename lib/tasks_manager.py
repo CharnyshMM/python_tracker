@@ -1,32 +1,35 @@
 from lib.task import *
 import datetime as dt
 from lib.logger import *
-from lib.decorators import key_function_builder
-from lib.exceptions import *
+
+from lib.exceptions import EndTimeOverflowError, SubtasksNotRemovedError
+
 
 class TasksManager:
     @log_decorator
     def __init__(self, tasks=None):
         if tasks is None:
             tasks = {}
-        # self.current_user = user
         self.tasks = tasks
 
-    # @log_decorator
-    # def create_new_task(self, new_task):
-    #     self.__create_new_task(new_task,self.current_user)
-
     @log_decorator
-    def create_new_task(self,new_task, user):
-        if new_task.has_attribute(TaskAttributes.OWNED_BY):
-            owners_id = new_task.attributes[TaskAttributes.OWNED_BY]
+    def create_new_task(self, new_task, user):
+        if new_task.has_attribute(TaskAttributes.PARENT):
+            parent_id = new_task.attributes[TaskAttributes.PARENT]
             this_id = new_task.attributes[TaskAttributes.UID]
-            self.tasks[owners_id].add_to_attribute(TaskAttributes.SUBTASKS,this_id,user)
+            parent_task = self.tasks[parent_id]
+            if not self.child_end_time_suits_parent(parent_task,new_task):
+                raise EndTimeOverflowError(parent_id)
+            self.tasks[parent_id].add_to_attribute(TaskAttributes.SUBTASKS,this_id,user)
 
         if new_task.has_attribute(TaskAttributes.SUBTASKS):
             this_id = new_task.attributes[TaskAttributes.UID]
             for sub_id in new_task.attributes[TaskAttributes.SUBTASKS]:
-                self.tasks[sub_id].set_attribute(TaskAttributes.OWNED_BY,this_id,user)
+                sub_task = self.tasks[sub_id]
+                if not self.child_end_time_suits_parent(new_task,sub_task):
+                    raise EndTimeOverflowError(sub_id)
+            for sub_id in new_task.attributes[TaskAttributes.SUBTASKS]:
+                self.tasks[sub_id].set_attribute(TaskAttributes.PARENT, this_id, user)
         self.tasks[new_task.get_attribute(TaskAttributes.UID)] = new_task
 
     @log_decorator
@@ -35,8 +38,8 @@ class TasksManager:
         if task.has_attribute(TaskAttributes.SUBTASKS):
             raise SubtasksNotRemovedError(task_id)
 
-        if task.has_attribute(TaskAttributes.OWNED_BY):
-            owner_id = task.get_attribute(TaskAttributes.OWNED_BY)
+        if task.has_attribute(TaskAttributes.PARENT):
+            owner_id = task.get_attribute(TaskAttributes.PARENT)
             self.tasks[owner_id].remove_from_attribute(TaskAttributes.SUBTASKS, task_id, user)
         elif user not in task.get_attribute(TaskAttributes.CAN_EDIT):
             raise PermissionError("Deleting permitted for user '{}'".format(user))
@@ -54,55 +57,59 @@ class TasksManager:
 
     @log_decorator
     def find_task(self, attributes):
-        key_func = key_function_builder(attributes)
+        key_func = self.key_function_builder(attributes)
         return self.select_tasks_by_key(key_func)
 
     @log_decorator
     def get_task(self, task_id):
         return self.tasks[task_id]
-        #return self.tasks.get_task(task_id)
 
     @log_decorator
     def get_all_tasks(self):
         return list(self.tasks.values())
 
-    @log_decorator
-    def edit_task(self,task_id,edited_task, user):
-        # TODO:
-        # add try catch
-        self.remove_task(task_id,user)
-        edited_task.set_attribute(TaskAttributes.UID,task_id, user)
-        self.create_new_task(edited_task)
+    def edit_task_start_time(self,task_id,new_start_time, user):
+        task = self.tasks[task_id]
+        end_time = task.try_get_attribute(TaskAttributes.END_TIME)
+        if end_time is None or new_start_time < end_time:
+            task.set_attribute(TaskAttributes.START_TIME, new_start_time, user)
+            return
+        raise EndTimeOverflowError()
+
+    def edit_task_end_time(self, task_id, new_end_time, user):
+        task = self.tasks[task_id]
+        start_time = task.try_get_attribute(TaskAttributes.START_TIME)
+        parent_id = task.try_get_attribute(TaskAttributes.PARENT)
+        parent = self.tasks.get(parent_id,None)
+        parent_end_time = None
+        if parent is not None:
+            parent_end_time = parent.try_get_attribute(TaskAttributes.END_TIME)
+
+        parent_independent = (parent_id is None or parent_end_time is None or parent_end_time >= new_end_time)
+        start_time_correct = start_time is None or start_time < new_end_time
+        if parent_independent and start_time_correct:
+            task.set_attribute(TaskAttributes.END_TIME, new_end_time, user)
+            return
+        raise EndTimeOverflowError()
 
     @log_decorator
-    def set_task_status(self, task_id, status, user):
-        if not isinstance(status,TaskStatus):
-            raise TypeError()
-        self.tasks[task_id].set_attribute(TaskAttributes.STATUS, user)
-
-    @log_decorator
-    def select_actual_tasks(self, date, delta=None):
+    def select_actual_tasks(self, time, delta=None):
         if delta is None:
             delta = dt.timedelta(minutes=5)
         result_dict = {'starting': {}, 'continuing': {}, 'ending':{}}
-        for k,v in self.tasks.items():
-            start_date = v.try_get_attribute(TaskAttributes.START_DATE)
-            if start_date is not None:
-                start_delta = date - start_date
-                if -delta <= start_delta < delta:
-                    result_dict['starting'][k] = v
-            end_date = v.try_get_attribute(TaskAttributes.END_DATE)
-            if end_date is None:
-                if k not in result_dict['starting']:
-                    result_dict['continuing'][k] = v
-            else:
-                end_delta = end_date - date
-                if end_delta >= dt.timedelta(0):
-                    if end_delta <= delta:
-                        result_dict['ending'][k] = v
-                    else:
-                        if v not in result_dict['starting']:
-                            result_dict['continuing'][k] = v
+        for k, v in self.tasks.items():
+            start_time = v.try_get_attribute(TaskAttributes.START_TIME)
+            if start_time is None:
+                start_time = dt.datetime(1,1,1,0,0)
+            end_time = v.try_get_attribute(TaskAttributes.END_TIME)
+            if end_time is None:
+                end_time = dt.datetime(9999, 12, 31, 23, 59, 59)
+            if -delta <= start_time - time <= delta:
+                result_dict['starting'][k] = v
+            elif end_time - time <= delta:
+                result_dict['ending'][k] = v
+            elif start_time - time < -delta and end_time - time > delta:
+                result_dict['continuing'][k] = v
         return result_dict
 
     @log_decorator
@@ -111,7 +118,7 @@ class TasksManager:
             delta = dt.timedelta(minutes=5)
         result_list = []
         for k, v in self.tasks.items():
-            reminders = v.try_get_attribute(TaskAttributes.REMIND_DATES)
+            reminders = v.try_get_attribute(TaskAttributes.REMIND_TIMES)
             if reminders is None:
                 continue
             for reminder in reminders:
@@ -126,3 +133,32 @@ class TasksManager:
                 result_dict[k] = v
 
         return result_dict
+
+    @staticmethod
+    def key_function_builder(search_keys_dict):
+        def filter_function(task):
+            for k, v in search_keys_dict.items():
+                attr_val = task.try_get_attribute(k)
+                if attr_val is None:
+                    return False
+                if isinstance(v, list):
+                    for item in v:
+                        if item not in attr_val:
+                            return False
+                elif attr_val != v:
+                    return False
+            return True
+
+        return filter_function
+
+    @staticmethod
+    def child_end_time_suits_parent(parent, child):
+        child_end_time = child.try_get_attribute(TaskAttributes.END_TIME)
+        parent_end_time = parent.try_get_attribute(TaskAttributes.END_TIME)
+        if parent_end_time is None:
+            return True
+        if child_end_time is None:
+            return False
+        if child_end_time <= parent_end_time:
+            return True
+        return False
