@@ -16,10 +16,11 @@ class Interface:
 
 
     @log_decorator
-    def add_task(self, title, start_date=None,
-                 end_date=None, remind_dates=None, status=None, owned_by=None, subtasks=None, tags=None, can_edit=None):
+    def add_task(self, title, start_date=None, end_date=None, remind_dates=None, status=TaskStatus.ACTIVE, owned_by=None,
+                 subtasks=None, tags=None, can_edit=None, priority=TaskPriority.MEDIUM):
 
-        t = Task(title,self.current_user,start_date=start_date,end_date=end_date,remind_dates=remind_dates,status=status,owned_by=owned_by,subtasks=subtasks,tags=tags,can_edit=can_edit)
+        t = Task(title,self.current_user,start_date=start_date,end_date=end_date,remind_dates=remind_dates,status=status,
+                 priority=priority, owned_by=owned_by,subtasks=subtasks,tags=tags,can_edit=can_edit)
         self.tasks_manager.create_new_task(t,self.current_user)
         self.db.put_all_tasks(self.tasks_manager.tasks)
 
@@ -58,6 +59,24 @@ class Interface:
         if tags is not None:
             params_dict[TaskAttributes.TAGS] = tags
         self.tasks_manager.edit_task(task_id, params_dict, self.current_user)
+        self.db.put_all_tasks(self.tasks_manager.tasks)
+
+    @log_decorator
+    def task_set_attribute(self,task_id, attribute, value):
+        task = self.tasks_manager.get_task(task_id)
+        task.set_attribute(attribute, value, self.current_user)
+        self.db.put_all_tasks(self.tasks_manager.tasks)
+
+    @log_decorator
+    def task_add_attribute(self, task_id, attribute, value):
+        task = self.tasks_manager.get_task(task_id)
+        task.add_to_attribute(attribute, value, self.current_user)
+        self.db.put_all_tasks(self.tasks_manager.tasks)
+
+    @log_decorator
+    def task_remove_attribute(self, task_id, attribute, value):
+        task = self.tasks_manager.get_task(task_id)
+        task.remove_from_attribute(attribute, value, self.current_user)
         self.db.put_all_tasks(self.tasks_manager.tasks)
 
     @log_decorator

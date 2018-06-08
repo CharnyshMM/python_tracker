@@ -1,11 +1,10 @@
 import configparser
-import os.path
+import os
 
 CONFIG_PATH = '../console_interface.config'
 
 
 class ConfigManager:
-
     def __init__(self):
         self.config = configparser.ConfigParser()
         try:
@@ -14,13 +13,12 @@ class ConfigManager:
             self.config['USER'] = ''
             self.write_config()
 
-
     def read_config(self):
         self.config.read(CONFIG_PATH)
 
     def get_default_user(self):
         self.read_config()
-        if (not self.config.has_option('DEFAULT','USER')) or self.config['DEFAULT']['USER'] == '':
+        if (not self.config.has_option('DEFAULT', 'USER')) or self.config['DEFAULT']['USER'] == '':
             return None
         return self.config['DEFAULT']['USER']
 

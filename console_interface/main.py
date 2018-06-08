@@ -5,12 +5,14 @@ from lib.task import TaskAttributes
 from console_interface.interface import Interface
 import console_interface.printers as printers
 from console_interface.config_manager import ConfigManager
+from lib.plan import TimeValueError
 import datetime as dt
 
 
-def main():
+
+def main(args):
     parser = get_parser()
-    command_dict = vars(parser.parse_args())
+    command_dict = vars(parser.parse_args(args.split(' ')))
     command = command_dict.pop(ParserCommands.COMMAND)
     user = ConfigManager().get_default_user()
     if command == ParserObjects.USER:
@@ -25,14 +27,50 @@ def main():
         return 0
     i = Interface(user)
 
+    subcommand = None
     if command != ParserCommands.CHECK:
         subcommand = command_dict.pop(ParserCommands.SUBCOMMAND)
-    else:
-        subcommand = ParserCommands.CHECK
     try:
         if command == ParserObjects.TASK:
             if subcommand == ParserCommands.ADD:
                 i.add_task(**command_dict)
+
+            elif subcommand == TaskEditCommand.EDIT:
+                task_id = command_dict[TaskEditCommand.ID]
+                if command_dict[TaskEditCommand.EDIT_KIND] == TaskEditCommand.SET:
+                    if command_dict[TaskAttributes.PRIORITY] is not None:
+                        priority = parse_priority(command_dict[TaskAttributes.PRIORITY])
+                        i.task_set_attribute(task_id,TaskAttributes.PRIORITY,priority)
+                    elif command_dict[TaskAttributes.STATUS] is not None:
+                        status = command_dict[TaskAttributes.STATUS]
+                        i.task_set_attribute(task_id,TaskAttributes.STATUS,status)
+                    elif command_dict[TaskAttributes.TITLE] is not None:
+                        title = command_dict[TaskAttributes.TITLE]
+                        i.task_set_attribute(task_id,TaskAttributes.TITLE,title)
+
+                elif command_dict[TaskEditCommand.EDIT_KIND] == TaskEditCommand.ADD:
+                    if command_dict[TaskAttributes.TAGS] is not None:
+                        tag = command_dict[TaskAttributes.TAGS]
+                        i.task_add_attribute(task_id,TaskAttributes.TAGS,tag)
+                    elif command_dict[TaskAttributes.CAN_EDIT] is not None:
+                        user = command_dict[TaskAttributes.CAN_EDIT]
+                        i.task_add_attribute(task_id,TaskAttributes.CAN_EDIT,user)
+                    elif command_dict[TaskAttributes.REMIND_DATES] is not None:
+                        reminder = command_dict[TaskAttributes.REMIND_DATES]
+                        i.task_add_attribute(task_id, TaskAttributes.REMIND_DATES, reminder)
+
+                elif command_dict[TaskEditCommand.EDIT_KIND] == TaskEditCommand.RM:
+                    if command_dict[TaskAttributes.TAGS] is not None:
+                        tag = command_dict[TaskAttributes.TAGS]
+                        i.task_remove_attribute(task_id,TaskAttributes.TAGS,tag)
+                    elif command_dict[TaskAttributes.CAN_EDIT] is not None:
+                        user = command_dict[TaskAttributes.CAN_EDIT]
+                        i.task_remove_attribute(task_id,TaskAttributes.CAN_EDIT,user)
+                    elif command_dict[TaskAttributes.REMIND_DATES] is not None:
+                        reminder = command_dict[TaskAttributes.REMIND_DATES]
+                        i.task_remove_attribute(task_id, TaskAttributes.REMIND_DATES, reminder)
+
+
             elif subcommand == ParserCommands.RM:
                 try:
                     if command_dict[RemoveTaskCommandArguments.F]:
@@ -56,30 +94,29 @@ def main():
                 else:
                     # todo: implement choise
                     tasks_d = i.tasks_manager.tasks
-                    printers.hierarchy_printer(tasks_d)
+                    printers.hierarchy_printer(tasks_d,attributes=command_dict)
 
-            elif subcommand == ParserCommands.CHECK:
-                if command_dict[CheckCommandArguments.DATE] is not None:
-                    date = parse_date(command_dict[CheckCommandArguments.DATE])
-                else:
-                    date = dt.datetime.now()
-                actual_tasks, reminders = i.check_time(date)
-                for each in reminders:
-                    printers.simple_reminder_printer(each)
-                printers.simple_actual_tasks_printer(**actual_tasks)
+        elif command == ParserCommands.CHECK:
+            if command_dict[CheckCommandArguments.DATE] is not None:
+                date = valid_date(command_dict[CheckCommandArguments.DATE])
+            else:
+                date = dt.datetime.now()
+            actual_tasks, reminders = i.check_time(date)
+            for each in reminders:
+                printers.simple_reminder_printer(each)
+            printers.simple_actual_tasks_printer(**actual_tasks)
 
         elif command == ParserObjects.PLAN:
 
             if subcommand == ParserCommands.ADD:
-                period = command_dict[AddPlanCommandArguments.PERIOD]
-                period = dt.timedelta(minutes=period)
+                period = parse_period(command_dict)
                 end_date = command_dict[AddPlanCommandArguments.FINISH]
                 task_id = command_dict[AddPlanCommandArguments.TASK_ID]
                 task_template = i.get_task(task_id)
                 try:
                     i.add_periodic_plan(period, task_template, task_id, end_date)
-                except PermissionError:
-                    print("")
+                except TimeValueError:
+                    print("! Py_Tracker: Task '{}' has no start time specified. Can't set up a plan for it".format(task_id))
                 i.check_plans()
 
             elif subcommand == ParserCommands.RM:
@@ -96,5 +133,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(input())
 
