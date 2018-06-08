@@ -4,27 +4,25 @@ import copy
 
 
 class TaskAttributes:
-    SUBTASKS = "subtasks"  # mult []
-    OWNED_BY = "owned_by"
-    TAGS = "tags"          # mult []
-    START_DATE = "start_date"
-    REMIND_DATES = "remind_dates" # mult
-    END_DATE = "end_date"
+    SUBTASKS = "subtasks"
+    PARENT = "parent"
+    TAGS = "tags"
+    START_TIME = "start_time"
+    REMIND_TIMES = "remind_times"
+    END_TIME = "end_time"
     AUTHOR = "author"
-    CAN_EDIT = "can_edit"     # mult
+    CAN_EDIT = "can_edit"
     TITLE = "title"
-    MESSAGE = "message"
     STATUS = "status"
     PRIORITY = "priority"
     UID = "uid"
-    PLAN = "plan"           # mult
+    PLAN = "plan"
 
 
 class TaskStatus:
-    ARCHIVED = "archived"
     ACTIVE = "active"
-    COMPLITE = "complete"
-    REJECTED = "rejected"
+    COMPLETE = "complete"
+
 
 
 class TaskPriority:
@@ -32,23 +30,34 @@ class TaskPriority:
     MEDIUM = 2
     LOW = 3
 
+    @classmethod
+    def string_priority(cls, priority):
+        if priority == cls.HIGH:
+            return 'HIGH'
+        if priority == cls.MEDIUM:
+            return 'MEDIUM'
+        if priority == cls.LOW:
+            return 'LOW'
 
 class Task:
-    def __init__(self, title, author, message=None, uid=None, start_date=None, remind_dates=None,
-                 end_date=None, status=TaskStatus.ACTIVE, priority=TaskPriority.LOW, owned_by=None, subtasks=None, plan=None, can_edit=None, tags=None):
+    def __init__(self, title, author, uid=None, start_time=None, remind_times=None,
+                 end_time=None, status=TaskStatus.ACTIVE, priority=TaskPriority.MEDIUM, parent=None, subtasks=None, plan=None, can_edit=None, tags=None):
         self.attributes = {TaskAttributes.TITLE: title,
                            TaskAttributes.AUTHOR: author,
                            TaskAttributes.STATUS: status,
                            TaskAttributes.PRIORITY: priority,
                            }
-        if start_date is not None:
-            self.__set_attribute(TaskAttributes.START_DATE,start_date)
-        if end_date is not None:
-            self.__set_attribute(TaskAttributes.END_DATE,end_date)
-        if remind_dates is not None:
-            self.__set_attribute(TaskAttributes.REMIND_DATES,remind_dates)
-        if owned_by is not None:
-            self.__set_attribute(TaskAttributes.OWNED_BY,owned_by)
+        if start_time is not None and end_time is not None:
+            if start_time >=end_time:
+                raise ValueError("start_time is greater than end_time")
+        if start_time is not None:
+            self.__set_attribute(TaskAttributes.START_TIME, start_time)
+        if end_time is not None:
+            self.__set_attribute(TaskAttributes.END_TIME, end_time)
+        if remind_times is not None:
+            self.__set_attribute(TaskAttributes.REMIND_TIMES, remind_times)
+        if parent is not None:
+            self.__set_attribute(TaskAttributes.PARENT, parent)
         if subtasks is not None:
             self.__set_attribute(TaskAttributes.SUBTASKS, subtasks)
         if plan is not None:
@@ -72,7 +81,7 @@ class Task:
         if val is None:
             return
         if attr not in [TaskAttributes.SUBTASKS,
-                        TaskAttributes.REMIND_DATES,
+                        TaskAttributes.REMIND_TIMES,
                         TaskAttributes.TAGS,
                         TaskAttributes.CAN_EDIT
                         ]:
