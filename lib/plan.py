@@ -1,4 +1,5 @@
 import datetime as dt
+import calendar
 import copy
 from lib.task import TaskAttributes
 from uuid import uuid1
@@ -16,6 +17,41 @@ class PeriodicPlanAttributes:
     TASK_TEMPLATE = 'task_template'
     USER = 'user'
     LAST_UPDATE_TIME = 'last_update_time'
+
+
+class Period:
+    YEARLY = 'yearly'
+    MONTHLY = 'monthly'
+    WEEKLY = 'weekly'
+    DAILY = 'daily'
+
+    @classmethod
+    def add_timedelta(cls,period, offset_date):
+        if isinstance(period,dt.timedelta):
+            return offset_date + period
+        if period == cls.DAILY:
+            return offset_date + dt.timedelta(days=1)
+        if period == cls.WEEKLY:
+            return offset_date + dt.timedelta(weeks=1)
+        if period == cls.MONTHLY:
+            month = offset_date.month
+            day = offset_date.day
+            year = offset_date.year
+            if month < 12:
+                month += 1
+            else:
+                month = 1
+                year += 1
+            month_range = calendar.monthrange(year,month)[1]
+            if day <= month_range:
+                return dt.datetime(year=year,month=month, day=day,hour=offset_date.hour, minute=offset_date.minute)
+            if month < 12:
+                month += 1
+            else:
+                month = 1
+                year += 1
+            day = day - month_range
+            return dt.datetime(year=year, month=month, day=day, hour=offset_date.hour, minute=offset_date.minute)
 
 
 class PeriodicPlan:
@@ -41,13 +77,13 @@ class PeriodicPlan:
 
         new_task = copy.copy(self.task_template)
 
-        start_date += self.period
+        start_date = Period.add_timedelta(self.period, start_date)
         if end_date is not None:
-            end_date += self.period
+            end_date = Period.add_timedelta(self.period, end_date)
 
         if remind_dates is not None:
             for i in range(len(remind_dates)):
-                remind_dates[i] += self.period
+                remind_dates[i] = Period.add_timedelta(self.period,remind_dates[i])
             new_task.set_attribute(TaskAttributes.REMIND_DATES, remind_dates, self.user)
 
         new_task.set_attribute(TaskAttributes.START_DATE,start_date,self.user)
@@ -64,8 +100,8 @@ class PeriodicPlan:
         if self.end_date is not None:
             if dt.datetime.now() > self.end_date:
                 return False
-        delta = dt.datetime.now() - self.last_update_time
-        if delta >= self.period:
+        delta = dt.datetime.now() - Period.add_timedelta(self.period, self.last_update_time)
+        if delta >= dt.timedelta(0):
             return True
         return False
 
