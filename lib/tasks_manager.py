@@ -106,7 +106,7 @@ class TasksManager:
         return result_dict
 
     @log_decorator
-    def select_actual_reminders(self,date,delta=None):
+    def select_actual_reminders(self,date, delta=None):
         if delta is None:
             delta = dt.timedelta(minutes=5)
         result_list = []
@@ -115,7 +115,7 @@ class TasksManager:
             if reminders is None:
                 continue
             for reminder in reminders:
-                if dt.timedelta(0) <= reminder - date <= delta:
+                if -delta <= reminder - date <= delta:
                     result_list.append(v)
         return result_list
 
