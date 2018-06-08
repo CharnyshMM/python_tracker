@@ -22,6 +22,6 @@ class PlansManager:
     def get_updates(self):
         tasks_to_add = []
         for k,v in self.plans.items():
-            if v.periodic_update_needed():
+            while v.periodic_update_needed():
                 tasks_to_add.append(v.get_next_periodic_task())
         return tasks_to_add
