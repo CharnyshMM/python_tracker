@@ -16,11 +16,14 @@ class Interface:
 
 
     @log_decorator
-    def add_task(self, title, start_date=None, end_date=None, remind_dates=None, status=TaskStatus.ACTIVE, owned_by=None,
-                 subtasks=None, tags=None, can_edit=None, priority=TaskPriority.MEDIUM):
-
-        t = Task(title,self.current_user,start_date=start_date,end_date=end_date,remind_dates=remind_dates,status=status,
-                 priority=priority, owned_by=owned_by,subtasks=subtasks,tags=tags,can_edit=can_edit)
+    def add_task(self, title, start_time=None, end_time=None, remind_times=None, status=None, parent=None,
+                 subtasks=None, tags=None, can_edit=None, priority=None):
+        if priority is None:
+            priority = TaskPriority.MEDIUM
+        if status is None:
+            status = TaskStatus.ACTIVE
+        t = Task(title, self.current_user, start_time=start_time, end_time=end_time, remind_times=remind_times, status=status,
+                 priority=priority, parent=parent, subtasks=subtasks, tags=tags, can_edit=can_edit)
         self.tasks_manager.create_new_task(t,self.current_user)
         self.db.put_all_tasks(self.tasks_manager.tasks)
 
@@ -39,32 +42,14 @@ class Interface:
         return self.tasks_manager.get_task(task_id)
 
     @log_decorator
-    def edit_task(self, task_id, title=None, author=None, start_date=None,
-                  end_date=None, remind_dates=None, owned_by=None, subtasks=None, tags=None, can_edit=None, status=None, ):
-        params_dict = {}
-        if title is not None:
-            params_dict[TaskAttributes.TITLE] = title
-        if author is not None:
-            params_dict[TaskAttributes.AUTHOR] = author
-        if start_date is not None:
-            params_dict[TaskAttributes.START_DATE] = start_date
-        if end_date is not None:
-            params_dict[TaskAttributes.END_DATE] = end_date
-        if remind_dates is not None:
-            params_dict[TaskAttributes.REMIND_DATES] = remind_dates
-        if owned_by is not None:
-            params_dict[TaskAttributes.OWNED_BY] = owned_by
-        if subtasks is not None:
-            params_dict[TaskAttributes.SUBTASKS] = subtasks
-        if tags is not None:
-            params_dict[TaskAttributes.TAGS] = tags
-        self.tasks_manager.edit_task(task_id, params_dict, self.current_user)
-        self.db.put_all_tasks(self.tasks_manager.tasks)
-
-    @log_decorator
     def task_set_attribute(self,task_id, attribute, value):
-        task = self.tasks_manager.get_task(task_id)
-        task.set_attribute(attribute, value, self.current_user)
+        if attribute == TaskAttributes.END_TIME:
+            self.tasks_manager.edit_task_end_time(task_id,value,self.current_user)
+        elif attribute == TaskAttributes.START_TIME:
+            self.tasks_manager.edit_task_start_time(task_id,value,self.current_user)
+        else:
+            task = self.tasks_manager.get_task(task_id)
+            task.set_attribute(attribute, value, self.current_user)
         self.db.put_all_tasks(self.tasks_manager.tasks)
 
     @log_decorator
@@ -80,25 +65,29 @@ class Interface:
         self.db.put_all_tasks(self.tasks_manager.tasks)
 
     @log_decorator
-    def find_tasks(self, title=None, author=None, start_date=None,
-                   end_date=None, remind_dates=None, owned_by=None, subtasks=None, tags=None, can_edit=None, status=None, ):
+    def find_tasks(self, title=None, author=None, start_time=None,
+                   end_time=None, remind_times=None, parent=None, subtasks=None, tags=None, can_edit=None, status=None, priority=None ):
         attributes = {}
         if title is not None:
             attributes[TaskAttributes.TITLE] = title
         if author is not None:
             attributes[TaskAttributes.AUTHOR] = author
-        if start_date is not None:
-            attributes[TaskAttributes.START_DATE] = start_date
-        if end_date is not None:
-            attributes[TaskAttributes.END_DATE] = end_date
-        if remind_dates is not None:
-            attributes[TaskAttributes.REMIND_DATES] = remind_dates
-        if owned_by is not None:
-            attributes[TaskAttributes.OWNED_BY] = owned_by
+        if start_time is not None:
+            attributes[TaskAttributes.START_TIME] = start_time
+        if end_time is not None:
+            attributes[TaskAttributes.END_TIME] = end_time
+        if remind_times is not None:
+            attributes[TaskAttributes.REMIND_TIMES] = remind_times
+        if parent is not None:
+            attributes[TaskAttributes.PARENT] = parent
         if subtasks is not None:
             attributes[TaskAttributes.SUBTASKS] = subtasks
         if tags is not None:
             attributes[TaskAttributes.TAGS] = tags
+        if priority is not None:
+            attributes[TaskAttributes.PRIORITY] = priority
+        if status is not None:
+            attributes[TaskAttributes.STATUS] = status
         return self.tasks_manager.find_task(attributes)
 
     @log_decorator
@@ -113,8 +102,8 @@ class Interface:
         return actual_tasks, reminders
 
     @log_decorator
-    def add_periodic_plan(self,period, task_template, task_id, end_date):
-        plan = PeriodicPlan(period,task_template,task_id, self.current_user,end_date=end_date)
+    def add_periodic_plan(self, period, task_template, task_id, end_time):
+        plan = PeriodicPlan(period, task_template, task_id, self.current_user, end_time=end_time)
         self.plans_manager.add_plan(plan)
         self.check_plans()
 
@@ -130,3 +119,8 @@ class Interface:
             self.tasks_manager.create_new_task(task, self.current_user)
         self.db.put_all_tasks(self.tasks_manager.tasks)
         self.db.put_all_plans(self.plans_manager.plans)
+
+    def complete_task(self,task_id):
+        task = self.tasks_manager.get_task(task_id)
+        task.set_attribute(TaskAttributes.STATUS, TaskStatus.COMPLETE, self.current_user)
+        self.db.put_all_tasks(self.tasks_manager.tasks)
