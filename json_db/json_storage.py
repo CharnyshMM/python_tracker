@@ -13,18 +13,18 @@ class JsonStorage:
     def task_to_json(task):
         j_dict = copy.deepcopy(task.attributes)
         j_dict[TaskAttributes.UID] = str(j_dict[TaskAttributes.UID])
-        if TaskAttributes.REMIND_DATES in j_dict:
-            dates = j_dict[TaskAttributes.REMIND_DATES]
+        if TaskAttributes.REMIND_TIMES in j_dict:
+            dates = j_dict[TaskAttributes.REMIND_TIMES]
             stamp_dates = [d.timestamp() for d in dates]
-            j_dict[TaskAttributes.REMIND_DATES] = stamp_dates
-        if TaskAttributes.START_DATE in j_dict:
-            j_dict[TaskAttributes.START_DATE] = j_dict[TaskAttributes.START_DATE].timestamp()
-        if TaskAttributes.END_DATE in j_dict:
-            j_dict[TaskAttributes.END_DATE] = j_dict[TaskAttributes.END_DATE].timestamp()
+            j_dict[TaskAttributes.REMIND_TIMES] = stamp_dates
+        if TaskAttributes.START_TIME in j_dict:
+            j_dict[TaskAttributes.START_TIME] = j_dict[TaskAttributes.START_TIME].timestamp()
+        if TaskAttributes.END_TIME in j_dict:
+            j_dict[TaskAttributes.END_TIME] = j_dict[TaskAttributes.END_TIME].timestamp()
         if TaskAttributes.SUBTASKS in j_dict:
             j_dict[TaskAttributes.SUBTASKS] = [str(i) for i in j_dict[TaskAttributes.SUBTASKS]]
-        if TaskAttributes.OWNED_BY in j_dict:
-            j_dict[TaskAttributes.OWNED_BY] = str(j_dict[TaskAttributes.OWNED_BY])
+        if TaskAttributes.PARENT in j_dict:
+            j_dict[TaskAttributes.PARENT] = str(j_dict[TaskAttributes.PARENT])
         if TaskAttributes.PLAN in j_dict:
             j_dict[TaskAttributes.PLAN] = str(j_dict[TaskAttributes.PLAN])
         return j_dict
@@ -32,17 +32,17 @@ class JsonStorage:
     @staticmethod
     def task_from_json(j_dict):
         j_dict[TaskAttributes.UID] = uuid.UUID(j_dict[TaskAttributes.UID])
-        if TaskAttributes.REMIND_DATES in j_dict:
-            dates = j_dict[TaskAttributes.REMIND_DATES]
-            j_dict[TaskAttributes.REMIND_DATES] = [dt.datetime.fromtimestamp(d) for d in dates]
-        if TaskAttributes.END_DATE in j_dict:
-            j_dict[TaskAttributes.END_DATE] = dt.datetime.fromtimestamp(j_dict[TaskAttributes.END_DATE])
-        if TaskAttributes.START_DATE in j_dict:
-            j_dict[TaskAttributes.START_DATE] = dt.datetime.fromtimestamp(j_dict[TaskAttributes.START_DATE])
+        if TaskAttributes.REMIND_TIMES in j_dict:
+            dates = j_dict[TaskAttributes.REMIND_TIMES]
+            j_dict[TaskAttributes.REMIND_TIMES] = [dt.datetime.fromtimestamp(d) for d in dates]
+        if TaskAttributes.END_TIME in j_dict:
+            j_dict[TaskAttributes.END_TIME] = dt.datetime.fromtimestamp(j_dict[TaskAttributes.END_TIME])
+        if TaskAttributes.START_TIME in j_dict:
+            j_dict[TaskAttributes.START_TIME] = dt.datetime.fromtimestamp(j_dict[TaskAttributes.START_TIME])
         if TaskAttributes.SUBTASKS in j_dict:
             j_dict[TaskAttributes.SUBTASKS] = [uuid.UUID(i) for i in j_dict[TaskAttributes.SUBTASKS]]
-        if TaskAttributes.OWNED_BY in j_dict:
-            j_dict[TaskAttributes.OWNED_BY] = uuid.UUID(j_dict[TaskAttributes.OWNED_BY])
+        if TaskAttributes.PARENT in j_dict:
+            j_dict[TaskAttributes.PARENT] = uuid.UUID(j_dict[TaskAttributes.PARENT])
         if TaskAttributes.PLAN in j_dict:
             j_dict[TaskAttributes.PLAN] = uuid.UUID(j_dict[TaskAttributes.PLAN])
         return Task(**j_dict)
@@ -84,15 +84,15 @@ class JsonStorage:
         self.write_string(json.JSONEncoder().encode(j_dict))
 
     def periodic_plan_to_json(self,plan):
-        if plan.end_date is None:
-            end_date = None
+        if plan.end_time is None:
+            end_time = None
         else:
-            end_date = plan.end_date.timestamp()
+            end_time = plan.end_time.timestamp()
         period = plan.period
         if isinstance(period,dt.timedelta):
             period = period.total_seconds()
         result_dict = {PeriodicPlanAttributes.PERIOD: period,
-                       PeriodicPlanAttributes.END_DATE: end_date,
+                       PeriodicPlanAttributes.END_TIME: end_time,
                        PeriodicPlanAttributes.TASK_TEMPLATE: self.task_to_json(plan.task_template),
                        PeriodicPlanAttributes.TASK_ID: str(plan.task_id),
                        PeriodicPlanAttributes.UID: str(plan.uid),
@@ -102,12 +102,12 @@ class JsonStorage:
         return result_dict
 
     def periodic_plan_from_json(self,j_dict):
-        end_date = j_dict[PeriodicPlanAttributes.END_DATE]
-        if end_date is not None:
-            end_date = dt.datetime.fromtimestamp(end_date)
+        end_time = j_dict[PeriodicPlanAttributes.END_TIME]
+        if end_time is not None:
+            end_time = dt.datetime.fromtimestamp(end_time)
         if not isinstance(j_dict[PeriodicPlanAttributes.PERIOD], str):
             j_dict[PeriodicPlanAttributes.PERIOD] = dt.timedelta(seconds=j_dict[PeriodicPlanAttributes.PERIOD])
-        j_dict[PeriodicPlanAttributes.END_DATE] = end_date
+        j_dict[PeriodicPlanAttributes.END_TIME] = end_time
         j_dict[PeriodicPlanAttributes.TASK_TEMPLATE] = self.task_from_json(j_dict[PeriodicPlanAttributes.TASK_TEMPLATE])
         j_dict[PeriodicPlanAttributes.TASK_ID] = uuid.UUID(j_dict[PeriodicPlanAttributes.TASK_ID])
         j_dict[PeriodicPlanAttributes.LAST_UPDATE_TIME] = dt.datetime.fromtimestamp(j_dict[PeriodicPlanAttributes.LAST_UPDATE_TIME])
