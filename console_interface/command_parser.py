@@ -2,88 +2,88 @@ from lib.task import TaskAttributes,TaskPriority,TaskStatus
 import argparse
 import uuid
 import datetime as dt
-from lib.plan import PeriodicPlanAttributes
 
 
 class ParserCommands:
-    #COMMAND = 'command'
     COMMAND = 'command'
     SUBCOMMAND = 'subcommand'
-    ADD = 'add'
-    RM = 'rm'
+
+class TaskCommands:
+    TASK = 'task'
+    class AddSubcommand:
+        COMMAND = 'add'
+    class PrintSubcommand:
+        COMMAND = 'print'
+        WIDE = 'w'
+        ID = 'id'  #change
+    class RemoveSubcommand:
+        COMMAND = 'rm'
+        ID = 'uid'
+        F = 'f'
+    class EditSubcommand:
+        COMMAND = 'edit'
+        EDIT_KIND = 'edit_kind'
+        ADD = 'add'
+        RM = 'rm'
+        SET = 'set'
+        ID = 'id'
+
+    class FindSubcommand:
+        COMMAND = 'find'
+        ID = 'uid'
+        TITLE = 'title'
+    class CompleteSubcommand:
+        COMMAND = 'complete'
+
+class PlanCommands:
+    PLAN = 'plan'
+
+    class AddSubcommand:
+        COMMAND = 'add'
+        TASK_ID = 'task_id'
+        FIXED = 'fixed'
+        YEARLY = 'yearly'
+        MONTHLY = 'monthly'
+        WEEKLY = 'weekly'
+        DAILY = 'daily'
+        HOURS = 'hours'
+        MINS = 'mins'
+        DAYS = 'days'
+        FINISH = 'finish'
+
+    class RemoveSubcommand:
+        COMMAND = 'rm'
+        PLAN_ID = 'id'
+
+    class PrintSubcommand:
+        COMMAND = 'print'
+        ID = 'uid'
+
+class UserCommands:
+    USER = 'user'
     SET = 'set'
-    CHECK = 'check'
-    FIND = 'find'
-    PRINT = 'print'
-    EDIT = 'edit'
+    GET = 'get'
+    NAME = 'name'
+
+class CheckCommand:
+    COMMAND = 'check'
+    PRIORITY = 'priority'
+    STATUS = 'status'
+    ID = 'uid'
 
 class ParserObjects:
     TASK = 'task'
     PLAN = 'plan'
     USER = 'user'
 
-class UserCommandArguments:
-    SET = 'set'
-    GET = 'get'
-    NAME = 'name'
-
-class RemoveTaskCommandArguments:
-    ID = 'uid'
-    F = 'f'
-
-    @staticmethod
-    def dash(arg):
-        return '-' + arg
-
-class CheckCommandArguments:
-    DATE = 'date'
-    ID = 'uid'
-
-
-class FindTaskCommandArguments:
-    ID = 'uid'
-    TITLE = 'title'
-
-class AddPlanCommandArguments:
-    TASK_ID = 'task_id'
-    FIXED = 'fixed'
-    YEARLY = 'yearly'
-    MONTHLY = 'monthly'
-    WEEKLY = 'weekly'
-    DAILY = 'daily'
-    HOURS = 'hours'
-    MINS = 'mins'
-    DAYS = 'days'
-    FINISH = 'finish'
-
-class RemovePlanCommandArguments:
-    PLAN_ID = 'id'
-    REMOVE_WITH_TASKS = 'r'
-
-
-class PrintTaskCommandArguments:
-    PRINT_DATES = 'print_dates'
-    ID = 'id'
-    PRINT_TAGS = 'print_tags'
-    PRINT_USERS = 'print_users'
-    PRINT_PLAN = 'print_plan'
-    HIERARCHY = 'hierarchy'
-
-class TaskEditCommand:
-    EDIT = 'edit'
-    EDIT_KIND = 'edit_kind'
-    ADD = 'add'
-    RM = 'rm'
-    SET = 'set'
-    ID = 'id'
-
-
 
 def valid_date(date_str):
     try:
         if date_str is None:
             return None
-        return dt.datetime.strptime(date_str, "%d/%m/%y_%H:%M")
+        if date_str == 'now':
+            return dt.datetime.now()
+        return dt.datetime.strptime(date_str, "%d/%m/%y %H:%M")
     except ValueError:
         msg = "Not a valid date: '{0}'.".format(date_str)
         raise argparse.ArgumentTypeError(msg)
@@ -95,27 +95,19 @@ def valid_uuid(uuid_str):
         msg = "Not a valid ID '{}'".format(uuid_str)
         raise argparse.ArgumentTypeError(msg)
 
-def parse_priority(string):
-    if string == 'high':
-        return TaskPriority.HIGH
-    if string == 'medium':
-        return TaskPriority.MEDIUM
-    if string == 'low':
-        return TaskPriority.LOW
-
-
 def parse_period(command_dict):
-    if command_dict[AddPlanCommandArguments.FIXED] is not None:
-        return command_dict[AddPlanCommandArguments.FIXED]
-    if command_dict[AddPlanCommandArguments.DAYS] is not None:
-        return dt.timedelta(days=command_dict[AddPlanCommandArguments.DAYS])
-    if command_dict[AddPlanCommandArguments.HOURS] is not None:
-        return dt.timedelta(hours=command_dict[AddPlanCommandArguments.HOURS])
-    if command_dict[AddPlanCommandArguments.MINS] is not None:
-        return dt.timedelta(minutes=command_dict[AddPlanCommandArguments.MINS])
+    if command_dict[PlanCommands.AddSubcommand.FIXED] is not None:
+        return command_dict[PlanCommands.AddSubcommand.FIXED]
+    if command_dict[PlanCommands.AddSubcommand.DAYS] is not None:
+        return dt.timedelta(days=command_dict[PlanCommands.AddSubcommand.DAYS])
+    if command_dict[PlanCommands.AddSubcommand.HOURS] is not None:
+        return dt.timedelta(hours=command_dict[PlanCommands.AddSubcommand.HOURS])
+    if command_dict[PlanCommands.AddSubcommand.MINS] is not None:
+        return dt.timedelta(minutes=command_dict[PlanCommands.AddSubcommand.MINS])
 
 
 def valid_positive(val):
+    val = int(val)
     if not isinstance(val,int) or val <= 0:
         raise argparse.ArgumentTypeError('Not a valid value {}'.format(val))
     return val
@@ -126,102 +118,109 @@ def get_parser():
     object_subparsers = parser.add_subparsers(dest='command',help='console interface for task tracker. '
                                                                   'Add, remove and plan tasks with it ;)')
     # OBJECT COMMANDS
-    user_parser = object_subparsers.add_parser('user', help='introduce yourself to py_tracker')
-    task_parser = object_subparsers.add_parser('task', help='to manage task objects')
-    plan_parser = object_subparsers.add_parser('plan', help='to manage plan objects')
+    user_parser = object_subparsers.add_parser(UserCommands.USER, help='introduce yourself to py_tracker')
+    task_parser = object_subparsers.add_parser(TaskCommands.TASK, help='to manage task objects')
+    plan_parser = object_subparsers.add_parser(PlanCommands.PLAN, help='to manage plan objects')
 
     # CHECK COMMAND
-    check_parser = object_subparsers.add_parser('check', help='check actual tasks')
-    check_parser.add_argument('-d','--date', type=valid_date, help='check actual tasks on some date & time')
+    check_parser = object_subparsers.add_parser(CheckCommand.COMMAND, help='check actual tasks')
+    check_parser.add_argument('-s','--status', dest=CheckCommand.STATUS,
+                              choices=[TaskStatus.ACTIVE,
+                                       TaskStatus.COMPLETE],
+                              help='tasks with only selected status would be shown if specified')
+    check_parser.add_argument('-p','--priority',
+                              choices=[1,2,3],
+                              type=int,
+                              dest=CheckCommand.PRIORITY,
+                              help='lest priority to be shown.  (1,2,3. 1 is the highest)')
 
     # USER PARSER
     user_subparser = user_parser.add_subparsers(dest=ParserCommands.SUBCOMMAND)
-    set_user_parser = user_subparser.add_parser('set', help='log in and interact as USER')
-    set_user_parser.add_argument('name', help='Your username')
-    user_subparser.add_parser('get',help='show your username')
+    set_user_parser = user_subparser.add_parser(UserCommands.SET, help='log in and interact as USER')
+    set_user_parser.add_argument(UserCommands.NAME, help='Your username')
+    user_subparser.add_parser(UserCommands.GET,help='show your username')
 
     task_subparsers = task_parser.add_subparsers(dest=ParserCommands.SUBCOMMAND)
 
     # ADD TASK PARSER
-    add_task_parser = task_subparsers.add_parser('add', help='add new task')
-    add_task_parser.add_argument('title',  help='title of a new task')
+    add_task_parser = task_subparsers.add_parser(TaskCommands.AddSubcommand.COMMAND, help='add new task')
+    add_task_parser.add_argument(TaskAttributes.TITLE,  help='title of a new task')
     add_task_optional_attributes(add_task_parser)
 
     # EDIT TASK PARSER
-    edit_task_parser = task_subparsers.add_parser('edit',help='edit some attributes of existing task')
-    edit_task_parser.add_argument('id',type=valid_uuid, help='id of task to be edited')
-    edit_task_subparsers = edit_task_parser.add_subparsers(dest=TaskEditCommand.EDIT_KIND, help='set,add, remove')
-    set_edit_parser = edit_task_subparsers.add_parser('set', help='set title, status, priority, time')
-    add_edit_parser = edit_task_subparsers.add_parser('add',help='add reminder, users, tags')
-    rm_edit_parser = edit_task_subparsers.add_parser('rm', help='remove reminder,users, tags')
-    # EDIT SET
+    edit_task_parser = task_subparsers.add_parser(TaskCommands.EditSubcommand.COMMAND, help='edit some attributes of existing task')
+    edit_task_parser.add_argument(TaskCommands.EditSubcommand.ID,type=valid_uuid, help='id of task to be edited')
+    edit_task_subparsers = edit_task_parser.add_subparsers(dest=TaskCommands.EditSubcommand.EDIT_KIND, help='set,add, remove')
+    set_edit_parser = edit_task_subparsers.add_parser(TaskCommands.EditSubcommand.SET, help='set title, status, priority, time')
+    add_edit_parser = edit_task_subparsers.add_parser(TaskCommands.EditSubcommand.ADD,help='add reminder, users, tags')
+    rm_edit_parser = edit_task_subparsers.add_parser(TaskCommands.EditSubcommand.RM, help='remove reminder,users, tags')
+    # EDIT TASK SET
     set_group = set_edit_parser.add_mutually_exclusive_group(required=True)
-    set_group.add_argument('-status',dest=TaskAttributes.STATUS,
+    set_group.add_argument('-status', dest=TaskAttributes.STATUS,
                            choices=[TaskStatus.ACTIVE,
-                                    TaskStatus.COMPLITE,
-                                    TaskStatus.ARCHIVED,
-                                    TaskStatus.REJECTED],
+                                    TaskStatus.COMPLETE],
+                           type=str,
                            help='choose new status value')
     set_group.add_argument('-priority', dest=TaskAttributes.PRIORITY,
-                           choices=['high', 'medium', 'low'],
-                           help='choose new priority')
+                           choices=[1,2,3],
+                           type=int,
+                           help='choose new priority. (1,2,3. 1 is the highest)')
     set_group.add_argument('-title',dest=TaskAttributes.TITLE,help='new title')
+    set_group.add_argument('-starts', dest=TaskAttributes.START_TIME, type=valid_date,
+                           help=r'"dd/mm/yy hh:mm" devide with slashes and semicolon, or "now"')
+    set_group.add_argument('-ends', dest=TaskAttributes.END_TIME, type=valid_date,
+                           help=r'"dd/mm/yy hh:mm" devide with slashes and semicolon or "now"')
 
-    # EDIT ADD
+    # EDIT TASK ADD
     add_group = add_edit_parser.add_mutually_exclusive_group(required=True)
     add_edit_group_arguments(add_group)
 
     add_edit_group_arguments(rm_edit_parser.add_mutually_exclusive_group(required=True))
 
+    # COMPLETE TASK PARSER
+    complete_parser = task_subparsers.add_parser('complete', help='change task status to COMPLETE')
+    complete_parser.add_argument(TaskAttributes.UID, type=valid_uuid, help='ID of completed task')
 
     # RM TASK PARSER
     rm_task_parser = task_subparsers.add_parser('rm',help='remove a task')
-    rm_task_parser.add_argument('uid', nargs='+', type=valid_uuid, help='ID of task to be removed')
-    rm_task_parser.add_argument('-f', action='store_true', dest=RemoveTaskCommandArguments.F, help='remove task with its subtasks')
+    rm_task_parser.add_argument(TaskAttributes.UID, nargs='+', type=valid_uuid, help='ID of task to be removed')
+    rm_task_parser.add_argument('-f', action='store_true', dest=TaskCommands.RemoveSubcommand.F, help='remove task with its subtasks')
 
     # PRINT TASK PARSER
-    print_task_parser = task_subparsers.add_parser('print', help='simply print task(s) with wider info')
+    print_task_parser = task_subparsers.add_parser('print', help='simply print task(s)')
     print_task_parser.add_argument('-id',
                                    type=valid_uuid,
+                                   dest=TaskCommands.PrintSubcommand.ID,
                                    help='print only the task with this ID')
-    print_task_parser.add_argument('-d','--dates',
-                                   dest=PrintTaskCommandArguments.PRINT_DATES,
-                                   action='store_true', help='print task dates')
-    print_task_parser.add_argument('-t', '--tags',
-                                   dest=PrintTaskCommandArguments.PRINT_TAGS,
-                                   action='store_true')
-    print_task_parser.add_argument('-u', '--users',
-                                   dest=PrintTaskCommandArguments.PRINT_USERS,
-                                   action='store_true', help='print users connected')
-    print_task_parser.add_argument('-pl', '--plan',
-                                   dest=PrintTaskCommandArguments.PRINT_PLAN,
-                                   action='store_true', help='print plan id')
-    print_task_parser.add_argument('-hr', '--hierarchy',
-                                   dest=PrintTaskCommandArguments.HIERARCHY,
-                                   action='store_true', help='hierarchical order')
+    print_task_parser.add_argument('-w','--wide',
+                                   dest=TaskCommands.PrintSubcommand.WIDE,
+                                   action='store_true', help='print whole the info about a task')
+
 
     # FIND TASK
-    find_parser = task_subparsers.add_parser('find', help='find task by arguments')
+    find_parser = task_subparsers.add_parser(TaskCommands.FindSubcommand.COMMAND, help='find task by arguments')
     find_parser.add_argument('-t', '--title',
-                             dest=FindTaskCommandArguments.TITLE,
+                             dest=TaskAttributes.TITLE,
                              help='find task by title')
+    add_task_optional_attributes(find_parser)
 
     plan_subparsers = plan_parser.add_subparsers(dest=ParserCommands.SUBCOMMAND)
 
     # ADD PLAN
-    add_plan_parser = plan_subparsers.add_parser('add',
+    add_plan_parser = plan_subparsers.add_parser(PlanCommands.AddSubcommand.COMMAND,
                                                  help='new periodic plan for existing task')
 
     fixed_period_group = add_plan_parser.add_mutually_exclusive_group(required=True)
-    fixed_period_group.add_argument('-fixed',choices=['yearly','monthly','weekly','daily'],help='fixed period')
-    fixed_period_group.add_argument('-days', type=valid_positive, help='every N days')
-    fixed_period_group.add_argument('-hours', type=valid_positive, help='every N hours')
-    fixed_period_group.add_argument('-mins', type=valid_positive, help='every N minutes')
+    fixed_period_group.add_argument('-fixed', dest=PlanCommands.AddSubcommand.FIXED, choices=['yearly','monthly','weekly','daily'],help='fixed period')
+    fixed_period_group.add_argument('-days', dest=PlanCommands.AddSubcommand.DAYS, type=valid_positive, help='every N days')
+    fixed_period_group.add_argument('-hours', dest=PlanCommands.AddSubcommand.HOURS, type=valid_positive, help='every N hours')
+    fixed_period_group.add_argument('-mins',dest=PlanCommands.AddSubcommand.MINS, type=valid_positive, help='every N minutes')
 
-    add_plan_parser.add_argument('task_id',
+    add_plan_parser.add_argument(PlanCommands.AddSubcommand.TASK_ID,
                                  type=valid_uuid,
                                  help='task_id to template task for the plan')
     add_plan_parser.add_argument('-finish',
+                                 dest=PlanCommands.AddSubcommand.FINISH,
                                  type=valid_date, default=None,
                                  help='when to finish repeating')
 
@@ -229,28 +228,29 @@ def get_parser():
     rm_plan_parser = plan_subparsers.add_parser('rm',help='remove plan by ID')
     rm_plan_parser.add_argument('id', nargs='+', type=valid_uuid, help='plans id')
 
+    # PRINT PLAN
+    print_plan_parser = plan_subparsers.add_parser('print', help='print all the plans')
+    print_plan_parser.add_argument('-id', dest=PlanCommands.PrintSubcommand.ID, type=valid_uuid, help='print single plan by ID')
+
     return parser
 
 
 def add_task_optional_attributes(parser):
     parser.add_argument('-status', dest=TaskAttributes.STATUS,
                         choices=[TaskStatus.ACTIVE,
-                                 TaskStatus.COMPLITE,
-                                 TaskStatus.ARCHIVED,
-                                 TaskStatus.REJECTED],
-                        default=TaskStatus.ACTIVE,
+                                 TaskStatus.COMPLETE],
                         help='choose status value')
-    parser.add_argument('-priority',dest=TaskAttributes.PRIORITY,
-                        choices=['high','medium','low'],
-                        default='medium',
-                        help='task priority')
-    parser.add_argument('-starts', dest=TaskAttributes.START_DATE, type=valid_date,
-                        help=r'"dd/mm/yy hh:mm" devide with slashes and semicolon')
-    parser.add_argument('-remind', dest=TaskAttributes.REMIND_DATES, type=valid_date, nargs='*',
-                        help=r'"dd/mm/yy hh:mm" devide with slashes and semicolon')
-    parser.add_argument('-ends', dest=TaskAttributes.END_DATE, type=valid_date,
-                        help=r'"dd/mm/yy_hh:mm" devide with slashes and semicolon')
-    parser.add_argument('-parent', dest=TaskAttributes.OWNED_BY, type=valid_uuid, help='just ID')
+    parser.add_argument('-priority', dest=TaskAttributes.PRIORITY,
+                        choices=[1, 2, 3],
+                        type=int,
+                        help='task priority (1,2,3. 1 is the highest)')
+    parser.add_argument('-starts', dest=TaskAttributes.START_TIME, type=valid_date,
+                        help=r'"dd/mm/yy hh:mm" devide with slashes and semicolon or just type "now"')
+    parser.add_argument('-remind', dest=TaskAttributes.REMIND_TIMES, type=valid_date, nargs='*',
+                        help=r'"dd/mm/yy hh:mm" devide with slashes and semicolon or just type "now"')
+    parser.add_argument('-ends', dest=TaskAttributes.END_TIME, type=valid_date,
+                        help=r'"dd/mm/yy_hh:mm" devide with slashes and semicolon or just type "now"')
+    parser.add_argument('-parent', dest=TaskAttributes.PARENT, type=valid_uuid, help='just ID')
     parser.add_argument('-subs', dest=TaskAttributes.SUBTASKS, type=valid_uuid, nargs='*', help='ids of subtasks')
     parser.add_argument('-tags', dest=TaskAttributes.TAGS, type=str, nargs='*', help='any words you like')
     parser.add_argument('-editors', dest=TaskAttributes.CAN_EDIT, type=str, nargs='*',
@@ -259,6 +259,6 @@ def add_task_optional_attributes(parser):
 
 def add_edit_group_arguments(group):
     group.add_argument('-user', dest=TaskAttributes.CAN_EDIT,help='user who can edit the task')
-    group.add_argument('-reminder', type=valid_date, dest=TaskAttributes.REMIND_DATES,help='reminder time,'
+    group.add_argument('-reminder', type=valid_date, dest=TaskAttributes.REMIND_TIMES, help='reminder time,'
                                                                                           ' "dd/mm/yy_hh:mm" devide with slashes and semicolon')
     group.add_argument('-tag', dest=TaskAttributes.TAGS,help='tag')
