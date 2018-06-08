@@ -80,7 +80,6 @@ class JsonStorage:
         except json.JSONDecodeError:
             return {}
 
-
     def write_json_dict(self, j_dict):
         self.write_string(json.JSONEncoder().encode(j_dict))
 
@@ -89,7 +88,10 @@ class JsonStorage:
             end_date = None
         else:
             end_date = plan.end_date.timestamp()
-        result_dict = {PeriodicPlanAttributes.PERIOD: plan.period.total_seconds(),
+        period = plan.period
+        if isinstance(period,dt.timedelta):
+            period = period.total_seconds()
+        result_dict = {PeriodicPlanAttributes.PERIOD: period,
                        PeriodicPlanAttributes.END_DATE: end_date,
                        PeriodicPlanAttributes.TASK_TEMPLATE: self.task_to_json(plan.task_template),
                        PeriodicPlanAttributes.TASK_ID: str(plan.task_id),
@@ -103,8 +105,8 @@ class JsonStorage:
         end_date = j_dict[PeriodicPlanAttributes.END_DATE]
         if end_date is not None:
             end_date = dt.datetime.fromtimestamp(end_date)
-
-        j_dict[PeriodicPlanAttributes.PERIOD] = dt.timedelta(seconds=j_dict[PeriodicPlanAttributes.PERIOD])
+        if not isinstance(j_dict[PeriodicPlanAttributes.PERIOD], str):
+            j_dict[PeriodicPlanAttributes.PERIOD] = dt.timedelta(seconds=j_dict[PeriodicPlanAttributes.PERIOD])
         j_dict[PeriodicPlanAttributes.END_DATE] = end_date
         j_dict[PeriodicPlanAttributes.TASK_TEMPLATE] = self.task_from_json(j_dict[PeriodicPlanAttributes.TASK_TEMPLATE])
         j_dict[PeriodicPlanAttributes.TASK_ID] = uuid.UUID(j_dict[PeriodicPlanAttributes.TASK_ID])
