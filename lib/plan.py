@@ -1,3 +1,7 @@
+r"""
+        This Module contains classes describing single plan.
+"""
+
 import datetime as dt
 import calendar
 import copy
@@ -9,6 +13,15 @@ from lib.exceptions import NoTimeValueError
 
 
 class PeriodicPlanAttributes:
+    r"""
+       Lists all the attributes of a single Plan.
+       PERIOD - a period to repeat planned task
+       END_TIME - when to stop repeating plan( if None then never stop)
+       TASK_ID - id of planned task
+       TASK_TEMPLATE - a Task object to be a template for each task created automatically by Plan
+       USER - a user who has rights to edit the TaskTemlpate
+       LAST_UPDATE_TIME - when last task was created by this Plan
+    """
     PERIOD = 'period'
     END_TIME = 'end_time'
     TASK_ID = 'task_id'
@@ -19,6 +32,15 @@ class PeriodicPlanAttributes:
 
 
 class Period:
+    r"""
+    Period class is for dealing with period for PeriodicPlan
+    It provides string representations of fised Periods:
+        YEARLY
+        MONTHLY
+        WEEKLY
+        DAILY
+    And the add_timedelta functions that takes a date, adds a period value to it and returns the result
+    """
     YEARLY = 'yearly'
     MONTHLY = 'monthly'
     WEEKLY = 'weekly'
@@ -26,6 +48,13 @@ class Period:
 
     @classmethod
     def add_timedelta(cls,period, offset_date):
+        r"""
+        Function to make a periodic move.
+
+        :param period: datetime.timedelta object or one of string periods provided by this class
+        :param offset_date: datetime.datetime date to add a period to
+        :return: datetime.datetime new date object that represents offset_date + period
+        """
         if isinstance(period,dt.timedelta):
             return offset_date + period
         if period == cls.DAILY:
@@ -57,7 +86,19 @@ class Period:
             return dt.datetime(year=year, month=offset_date.month, day=offset_date.day, hour=offset_date.hour, minute=offset_date.minute)
         raise ValueError('unknown period')
 
+
 class PeriodicPlan:
+
+    r"""
+        The core class for dealing with plans.
+        Its instance describes a plan with:
+            - template of periodic task
+            - period of repetition
+            - last update time
+            - user, who can edit the task template
+        The instance could say if it needs an update and perform an update, returning new task
+        """
+
     def __init__(self, period, task_template, task_id, user, uid=None, end_time=None, last_update_time = None):
         self.period = period
         self.task_template = copy.copy(task_template)
@@ -74,6 +115,12 @@ class PeriodicPlan:
         self.last_update_time = last_update_time
 
     def get_next_periodic_task(self):
+        r"""
+            Function to create and return next periodic task made of task_template.
+            ! It doesn't check whether it needs to update or not, it just returns a new task moved a period ahead!
+        :return: Task - next periodic task
+        """
+
         start_time = self.task_template.try_get_attribute(TaskAttributes.START_TIME)
         remind_times = self.task_template.try_get_attribute(TaskAttributes.REMIND_TIMES)
         end_time = self.task_template.try_get_attribute(TaskAttributes.END_TIME)
@@ -98,6 +145,10 @@ class PeriodicPlan:
         return new_task
 
     def periodic_update_needed(self):
+        """
+            Fucntion to check if it's time to update a periodic task.
+        :return: Boolean True - if update is needed, otherwise False
+        """
         if self.last_update_time is None:
             return True
         if self.end_time is not None:

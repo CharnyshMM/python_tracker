@@ -1,9 +1,28 @@
-import datetime
+""" Task module includes classes that are used to describe a Task"""
+
+
 from uuid import uuid1
 import copy
 
 
+
 class TaskAttributes:
+    r"""
+        Class that just stores single Task attributes
+        TITLE - a title of task(Can't be None)
+        SUBTASKS - child tasks connected to a task. They can't end later than their parent
+        PARENT - id of parent task
+        TAGS - user defined key_words
+        STARTTIME - when the task starts
+        END_TIME - when the task ends
+        REMINS_TIMES - list of times when to remind about the task
+        AUTHOR - a username of him who created a task(Can't be None)
+        CAN_EDIT - list of usernames who can make changes in task
+        STATUS - one of fixed TaskStatus sttuses
+        PRIORITY - one of fixed in TaskPriority priorities
+        UID - unique id of a task
+        PLAN - id of PeriodicPlan object if this task was created automatically by it
+    """
     SUBTASKS = "subtasks"
     PARENT = "parent"
     TAGS = "tags"
@@ -20,18 +39,21 @@ class TaskAttributes:
 
 
 class TaskStatus:
+    """Just task status"""
     ACTIVE = "active"
     COMPLETE = "complete"
 
 
 
 class TaskPriority:
+    """Task Priority"""
     HIGH = 1
     MEDIUM = 2
     LOW = 3
 
     @classmethod
     def string_priority(cls, priority):
+        """converts int priority to string"""
         if priority == cls.HIGH:
             return 'HIGH'
         if priority == cls.MEDIUM:
@@ -48,7 +70,7 @@ class Task:
                            TaskAttributes.PRIORITY: priority,
                            }
         if start_time is not None and end_time is not None:
-            if start_time >=end_time:
+            if start_time >= end_time:
                 raise ValueError("start_time is greater than end_time")
         if start_time is not None:
             self.__set_attribute(TaskAttributes.START_TIME, start_time)
@@ -78,6 +100,14 @@ class Task:
             self.attributes[TaskAttributes.UID] = uid
 
     def __set_attribute(self, attr, val):
+
+        """
+        Set attribute means to set the whole value.
+        private function to set attribute without checking user
+
+        :param attr: TaskAttribute attribute
+        :param val: Value, a list or a single one
+        """
         if val is None:
             return
         if attr not in [TaskAttributes.SUBTASKS,
@@ -93,6 +123,12 @@ class Task:
                 self.attributes[attr] = [val]
 
     def __add_to_list_attribute(self, attr, val):
+        """
+        Private add_to_Attribute, doen't check user permissions
+         :param attr: TaskAttribute attribute
+        :param val: Value, a list or a single one
+        :return: None
+        """
         if attr not in self.attributes:
             self.attributes[attr] = []
         if isinstance(val, list):
@@ -101,11 +137,20 @@ class Task:
             self.attributes[attr].append(val)
 
     def __unset_attribute(self, attr):
-        # TODO:
-        # need to forbid unsetting name or UID
+        """
+        Private unset. Just removes the attribute
+        :param attr: TaskAttribute to be removed
+        :return:
+        """
         self.attributes.pop(attr)
 
     def __remove_from_list_attribute(self,attr,val):
+        """
+        Private. To pop some values of list attributes
+         :param attr: TaskAttribute attribute
+        :param val: Value, a list or a single one
+        :return: None
+        """
         if not isinstance(val,list):
             val = [val]
         self.attributes[attr] = list(set(self.attributes[attr]) - set(val))
@@ -113,26 +158,55 @@ class Task:
             self.__unset_attribute(attr)
 
     def set_attribute(self,attr,val,user):
+        """
+        Sets the attribute value. Checks user permissions. Can raise a permission error.
+        :param attr: TaskAttribute attribute
+        :param val: Value, a list or a single one
+        :param user: username
+        :return: None
+
+        """
         if user not in self.attributes[TaskAttributes.CAN_EDIT]:
             raise PermissionError()
         self.__set_attribute(attr,val)
 
     def unset_attribute(self, attr, user):
+        """
+        Completely removes attribute.Checks user permissions.Can raise a permission error.
+        :param attr: TaskAttribute attribute
+        :param user: username
+        :return: None
+        """
         if user not in self.attributes[TaskAttributes.CAN_EDIT]:
             raise PermissionError()
         self.__unset_attribute(attr)
 
     def add_to_attribute(self, attr, val,user):
+        """
+        Adds a value to a list attribute. Checks user permissions. Can raise a permission error.
+        :param attr: TaskAttribute attribute
+        :param val: value to add. A list or a single one
+        :param user: username
+        :return:
+        """
         if user not in self.attributes[TaskAttributes.CAN_EDIT]:
             raise PermissionError()
         self.__add_to_list_attribute(attr, val)
 
     def remove_from_attribute(self, attr, val, user):
+        """
+        Pop some values from attribute. (Checks user permissions). Can raise a permission error.
+        :param attr: TaskAttribute attribute
+        :param val: Value, a list or a single one
+        :param user: username
+        :return: None
+        """
         if user not in self.attributes[TaskAttributes.CAN_EDIT]:
             raise PermissionError()
         self.__remove_from_list_attribute(attr,val)
 
     def get_attribute(self, attr):
+
         return self.attributes[attr]
 
     def try_get_attribute(self, attr):
