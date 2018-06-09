@@ -73,7 +73,7 @@ class TasksManagerTestCase(unittest.TestCase):
         self.assertDictEqual(actuals['starting'], {self.task1_id: self.task1})
         self.assertDictEqual(actuals['ending'],{self.task4_id: self.task4})
         reminders = self.tasks_manager.select_actual_reminders(self.START_DATE)
-        self.assertListEqual(reminders,[self.task4,self.task1])
+        self.assertListEqual(reminders, [self.task4, self.task1])
 
 
 if __name__ == '__main__':
