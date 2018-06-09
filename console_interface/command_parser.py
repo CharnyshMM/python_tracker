@@ -1,3 +1,5 @@
+"""This module has a get_parser method to return a complete console input parser and commands collections"""
+
 from lib.task import TaskAttributes,TaskPriority,TaskStatus
 import argparse
 import uuid
@@ -5,10 +7,12 @@ import datetime as dt
 
 
 class ParserCommands:
+
     COMMAND = 'command'
     SUBCOMMAND = 'subcommand'
 
 class TaskCommands:
+    """Commands that can be called to operate with tasks."""
     TASK = 'task'
     class AddSubcommand:
         COMMAND = 'add'
@@ -36,6 +40,7 @@ class TaskCommands:
         COMMAND = 'complete'
 
 class PlanCommands:
+    """Commands that can be called to operate with plans"""
     PLAN = 'plan'
 
     class AddSubcommand:
@@ -96,6 +101,7 @@ def valid_uuid(uuid_str):
         raise argparse.ArgumentTypeError(msg)
 
 def parse_period(command_dict):
+    """Parse plan period input"""
     if command_dict[PlanCommands.AddSubcommand.FIXED] is not None:
         return command_dict[PlanCommands.AddSubcommand.FIXED]
     if command_dict[PlanCommands.AddSubcommand.DAYS] is not None:
