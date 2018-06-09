@@ -16,8 +16,8 @@ class PlanTestCase(unittest.TestCase):
     def setUp(self):
         self.task = Task(title=self.TITLE,
                          author=self.AUTHOR,
-                         start_date=self.START_DATE,
-                         end_date=self.START_DATE+self.TIMEDELTA,
+                         start_time=self.START_DATE,
+                         end_time=self.START_DATE + self.TIMEDELTA,
                          can_edit=[self.USER_1]
                          )
         task_id = self.task.get_attribute(TaskAttributes.UID)
@@ -33,14 +33,16 @@ class PlanTestCase(unittest.TestCase):
         self.plan.last_update_time = None
         self.assertTrue(self.plan.periodic_update_needed())
         next_task = self.plan.get_next_periodic_task()
-        self.assertEqual(next_task.get_attribute(TaskAttributes.START_DATE),
-                         self.task.get_attribute(TaskAttributes.START_DATE)+self.PERIOD)
+        self.assertEqual(next_task.get_attribute(TaskAttributes.START_TIME),
+                         self.task.get_attribute(TaskAttributes.START_TIME) + self.PERIOD)
         self.assertEqual(next_task.get_attribute(TaskAttributes.PLAN),self.plan.uid)
 
     def test_plan_stop(self):
         if self.plan.periodic_update_needed():
             self.plan.get_next_periodic_task()
         self.assertFalse(self.plan.periodic_update_needed())
+
+
 
 if __name__ == '__main__':
     unittest.main()
