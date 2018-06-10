@@ -1,5 +1,5 @@
-from lib.plan import PeriodicPlan,PeriodicPlanAttributes
-from lib.task import Task,TaskAttributes
+from lib.entities.plan import PeriodicPlan
+from lib.entities.task import Task,TaskAttributes
 import datetime as dt
 import unittest
 
@@ -41,7 +41,6 @@ class PlanTestCase(unittest.TestCase):
         if self.plan.periodic_update_needed():
             self.plan.get_next_periodic_task()
         self.assertFalse(self.plan.periodic_update_needed())
-
 
 
 if __name__ == '__main__':

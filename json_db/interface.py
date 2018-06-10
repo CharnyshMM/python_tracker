@@ -1,7 +1,10 @@
+"""Simple DB interface"""
+
 from json_db.json_storage import JsonStorage
 from json_db.default_config import *
+from lib.db_adapter import DBAdapter
 
-class DB:
+class DB(DBAdapter):
     def __init__(self):
         # TODO: loading from config
         if not os.path.isdir(DEFAULT_STORAGE_DIR):

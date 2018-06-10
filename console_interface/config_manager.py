@@ -1,13 +1,18 @@
+"""This module describes a ConfigManager class"""
+
 import configparser
 import os
 
-CONFIG_PATH = '../console_interface.config'
-
+DEFAULT_DIR = os.path.join(os.environ['HOME'], 'py_tracker')
+CONFIG_PATH = os.path.join(DEFAULT_DIR, 'py_tracker_cli.config')
 
 class ConfigManager:
+    """Tiny config manager for Console interface. Config stores default user."""
     def __init__(self):
         self.config = configparser.ConfigParser()
         try:
+            if not os.path.isdir(DEFAULT_DIR):
+                os.mkdir(DEFAULT_DIR)
             self.config.read(CONFIG_PATH)
         except FileNotFoundError:
             self.config['USER'] = ''

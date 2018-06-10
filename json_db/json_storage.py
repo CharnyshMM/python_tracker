@@ -1,8 +1,7 @@
 import json
-import datetime as dt
-from lib.task import *
 import uuid
-from lib.plan import *
+from lib.entities.task import *
+from lib.entities.plan import *
 
 
 class JsonStorage:

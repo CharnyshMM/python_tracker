@@ -1,9 +1,9 @@
 r""" Task manager module contains a single TasksManager class"""
 
-from lib.task import *
+from lib.entities.task import *
 import datetime as dt
 from lib.logger import *
-from lib.exceptions import EndTimeOverflowError, SubtasksNotRemovedError
+from lib.entities.exceptions import EndTimeOverflowError, SubtasksNotRemovedError
 
 
 

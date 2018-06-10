@@ -1,9 +1,9 @@
-from setuptools import setup
+from setuptools import setup,find_packages
 
 setup(
     name='python_tracker',
     version='0.1',
-    packages=['lib','json_db','console_interface'],
+    packages=find_packages(),
     entry_points={
         'console_scripts':
             ['py_tracker = console_interface.main:main']

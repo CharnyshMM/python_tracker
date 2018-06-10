@@ -1,19 +1,21 @@
-from lib.tasks_manager import *
-from lib.plan import *
-from lib.plans_manager import PlansManager
-from lib.logger import *
-from json_db.interface import DB
+"""This module contains single Interface class"""
+
+from lib.entities.tasks_manager import *
+from lib.entities.plan import *
+from lib.entities.plans_manager import PlansManager
+from lib.logger import log_decorator
+
 
 
 class Interface:
+    """Interface class is designed to unite and encapsulate all the tasks and plans processing operations
+        and provide convenient interface to operate with commands"""
     @log_decorator
-    def __init__(self, user):
-        configure_logger()
+    def __init__(self, db_adapter, user):
         self.current_user = user
-        self.db = DB()
+        self.db = db_adapter
         self.tasks_manager = TasksManager(tasks=self.db.get_all_tasks())
         self.plans_manager = PlansManager(self.db.get_all_plans())
-
 
     @log_decorator
     def add_task(self, title, start_time=None, end_time=None, remind_times=None, status=None, parent=None,
@@ -26,6 +28,7 @@ class Interface:
                  priority=priority, parent=parent, subtasks=subtasks, tags=tags, can_edit=can_edit)
         self.tasks_manager.create_new_task(t,self.current_user)
         self.db.put_all_tasks(self.tasks_manager.tasks)
+        return t.get_attribute(TaskAttributes.UID)
 
     @log_decorator
     def remove_task(self, task_id):

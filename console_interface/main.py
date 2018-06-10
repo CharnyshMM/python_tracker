@@ -1,18 +1,26 @@
-#! /usr/bin/python3.5
+"""Main module of console interface. main() function is the entry point for the app"""
 
-from console_interface.command_parser import *
-from lib.task import TaskAttributes
-from console_interface.task_interface import Interface
+
+from lib.entities.task import TaskAttributes
+from lib.entities.exceptions import EndTimeOverflowError, SubtasksNotRemovedError, NoTimeValueError
+from json_db.interface import DB
+from lib.task_interface import Interface
 import console_interface.printers as printers
 from console_interface.config_manager import ConfigManager
-from lib.exceptions import EndTimeOverflowError, SubtasksNotRemovedError, NoTimeValueError
-import datetime as dt
+from lib.logger import get_logger
+from console_interface.command_parser import *
 
 
 def main():
+    r"""The function is the entry point to the Py_Tracker app.
+        It calls the parser and processes the parser output."""
+
+    logger = get_logger().getChild('console_main')
+    logger.info('Started')
     parser = get_parser()
     command_dict = vars(parser.parse_args())
     command = command_dict.pop(ParserCommands.COMMAND)
+    logger.debug('command {}'.format(command))
     user = ConfigManager().get_default_user()
     if command == ParserObjects.USER:
         subcommand = command_dict[ParserCommands.SUBCOMMAND]
@@ -24,19 +32,21 @@ def main():
     if user is None:
         print("Hi, dear User. Please introduce yourself to py_tracker by calling 'py_tracker user set YOUR_NAME''.")
         return 0
-    inteface = Interface(user)
+    inteface = Interface(DB(),user)
 
     subcommand = None
     if command != CheckCommand.COMMAND:
         subcommand = command_dict.pop(ParserCommands.SUBCOMMAND)
+    logger.debug('subcommand {}'.format(subcommand))
     try:
         if command == ParserObjects.TASK:
             if subcommand == TaskCommands.AddSubcommand.COMMAND:
                 try:
-                    inteface.add_task(**command_dict)
+                    task_id = inteface.add_task(**command_dict)
+                    print("Task created. Its ID is {}".format(str(task_id)))
                 except EndTimeOverflowError as e:
                     print("! Oh! The subtask can't end later than its parent. Please check task id {}".format(e.args))
-                except ValueError as e:
+                except ValueError:
                     print("! Oh! The start time couldn't be less or than end time")
 
             elif subcommand == TaskCommands.EditSubcommand.COMMAND:
@@ -45,31 +55,38 @@ def main():
                     if command_dict[TaskAttributes.PRIORITY] is not None:
                         priority = command_dict[TaskAttributes.PRIORITY]
                         inteface.task_set_attribute(task_id, TaskAttributes.PRIORITY,priority)
+
                     elif command_dict[TaskAttributes.STATUS] is not None:
                         status = command_dict[TaskAttributes.STATUS]
                         inteface.task_set_attribute(task_id, TaskAttributes.STATUS,status)
+
                     elif command_dict[TaskAttributes.TITLE] is not None:
                         title = command_dict[TaskAttributes.TITLE]
                         inteface.task_set_attribute(task_id, TaskAttributes.TITLE,title)
+
                     elif command_dict[TaskAttributes.START_TIME] is not None:
                         try:
                             date = command_dict[TaskAttributes.START_TIME]
                             inteface.task_set_attribute(task_id, TaskAttributes.START_TIME, date)
                         except EndTimeOverflowError:
                             print("! Oh! The start time conflicts with task end time")
+
                     elif command_dict[TaskAttributes.END_TIME] is not None:
                         try:
                             date = command_dict[TaskAttributes.END_TIME]
                             inteface.task_set_attribute(task_id, TaskAttributes.END_TIME, date)
                         except EndTimeOverflowError:
                             print("! Oh! The end time conflicts with the start time or with parent task end time")
+
                 elif command_dict[TaskCommands.EditSubcommand.EDIT_KIND] == TaskCommands.EditSubcommand.ADD:
                     if command_dict[TaskAttributes.TAGS] is not None:
                         tag = command_dict[TaskAttributes.TAGS]
                         inteface.task_add_attribute(task_id,TaskAttributes.TAGS,tag)
+
                     elif command_dict[TaskAttributes.CAN_EDIT] is not None:
                         user = command_dict[TaskAttributes.CAN_EDIT]
                         inteface.task_add_attribute(task_id,TaskAttributes.CAN_EDIT,user)
+
                     elif command_dict[TaskAttributes.REMIND_TIMES] is not None:
                         reminder = command_dict[TaskAttributes.REMIND_TIMES]
                         inteface.task_add_attribute(task_id, TaskAttributes.REMIND_TIMES, reminder)
@@ -78,9 +95,11 @@ def main():
                     if command_dict[TaskAttributes.TAGS] is not None:
                         tag = command_dict[TaskAttributes.TAGS]
                         inteface.task_remove_attribute(task_id,TaskAttributes.TAGS,tag)
+
                     elif command_dict[TaskAttributes.CAN_EDIT] is not None:
                         user = command_dict[TaskAttributes.CAN_EDIT]
                         inteface.task_remove_attribute(task_id,TaskAttributes.CAN_EDIT,user)
+
                     elif command_dict[TaskAttributes.REMIND_TIMES] is not None:
                         reminder = command_dict[TaskAttributes.REMIND_TIMES]
                         inteface.task_remove_attribute(task_id, TaskAttributes.REMIND_TIMES, reminder)
@@ -105,10 +124,15 @@ def main():
             elif subcommand == TaskCommands.PrintSubcommand.COMMAND:
                 if command_dict[TaskCommands.PrintSubcommand.ID]:
                     task = inteface.get_task(command_dict[TaskCommands.PrintSubcommand.ID])
-                    printers.simple_task_printer(task, command_dict[TaskCommands.PrintSubcommand.WIDE])
+                    if command_dict[TaskCommands.PrintSubcommand.SUBTASKS]:
+                        printers.complex_task_printer(task, inteface.tasks_manager.tasks,
+                                                      wide_print=command_dict[TaskCommands.PrintSubcommand.WIDE])
+                    else:
+                        printers.simple_task_printer(task,wide_print=command_dict[TaskCommands.PrintSubcommand.WIDE])
+
                 else:
                     tasks_d = inteface.tasks_manager.tasks
-                    printers.hierarchy_printer(tasks_d,command_dict[TaskCommands.PrintSubcommand.WIDE])
+                    printers.hierarchy_printer(tasks_d,wide_print=command_dict[TaskCommands.PrintSubcommand.WIDE])
 
             elif subcommand == TaskCommands.CompleteSubcommand.COMMAND:
                 inteface.complete_task(command_dict[TaskAttributes.UID])
@@ -151,11 +175,20 @@ def main():
         elif command == ParserObjects.USER:
             if subcommand == UserCommands.GET:
                 print('USERNAME: {}'.format(inteface.current_user))
+        logger.info('Exited successfully')
         return 0
     except PermissionError as e:
+        logger.error(e.args)
         print("! Oh! Permission denied for user: {}".format(inteface.current_user))
+        return 1
     except KeyError as e:
-        print("! Oh! The key {} can't be found. Please check if it is correct".format(e.args))
+        logger.error(e.args)
+        print("! Oh! The key {} can't be found. Please check if it is correct or if it exists".format(e))
+        return 1
+    except Exception as e:
+        logger.error(e.args)
+        print('! Oh! Something went wrong. Program quited')
+        return 1
 
 if __name__ == '__main__':
     main()

@@ -5,9 +5,9 @@ r"""
 import datetime as dt
 import calendar
 import copy
-from lib.task import TaskAttributes
+from lib.entities.task import TaskAttributes
 from uuid import uuid1
-from lib.exceptions import NoTimeValueError
+from lib.entities.exceptions import NoTimeValueError
 
 
 
@@ -83,7 +83,13 @@ class Period:
         if period == Period.YEARLY:
             year = offset_date.year
             year += 1
-            return dt.datetime(year=year, month=offset_date.month, day=offset_date.day, hour=offset_date.hour, minute=offset_date.minute)
+            month = offset_date.month
+            day = offset_date.day
+            non_leap_year_issue = (month == 2 and day == 29 and calendar.monthrange(year,month)[1] == 28)
+            if non_leap_year_issue:
+                month = 3
+                day = 1
+            return dt.datetime(year=year, month=month, day=day, hour=offset_date.hour, minute=offset_date.minute)
         raise ValueError('unknown period')
 
 

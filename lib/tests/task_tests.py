@@ -1,6 +1,6 @@
-from lib.task import *
+from lib.entities.task import *
 import unittest
-
+import datetime
 
 class TaskTestCase(unittest.TestCase):
     TITLE = 'title'
