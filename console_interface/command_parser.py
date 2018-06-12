@@ -15,19 +15,19 @@ class TaskCommands:
     """Commands that can be called to operate with tasks."""
     TASK = 'task'
     class AddSubcommand:
-        COMMAND = 'add'
+        ADD = 'add'
     class PrintSubcommand:
-        COMMAND = 'print'
+        PRINT = 'print'
         WIDE = 'w'
         ID = 'id'  #change
         SUBTASKS = 's'
 
     class RemoveSubcommand:
-        COMMAND = 'rm'
+        RM = 'rm'
         ID = 'uid'
         F = 'f'
     class EditSubcommand:
-        COMMAND = 'edit'
+        EDIT = 'edit'
         EDIT_KIND = 'edit_kind'
         ADD = 'add'
         RM = 'rm'
@@ -35,18 +35,18 @@ class TaskCommands:
         ID = 'id'
 
     class FindSubcommand:
-        COMMAND = 'find'
+        FIND = 'find'
         ID = 'uid'
         TITLE = 'title'
     class CompleteSubcommand:
-        COMMAND = 'complete'
+        COMPLETE = 'complete'
 
 class PlanCommands:
     """Commands that can be called to operate with plans"""
     PLAN = 'plan'
 
     class AddSubcommand:
-        COMMAND = 'add'
+        ADD = 'add'
         TASK_ID = 'task_id'
         FIXED = 'fixed'
         YEARLY = 'yearly'
@@ -59,11 +59,11 @@ class PlanCommands:
         FINISH = 'finish'
 
     class RemoveSubcommand:
-        COMMAND = 'rm'
+        RM = 'rm'
         PLAN_ID = 'id'
 
     class PrintSubcommand:
-        COMMAND = 'print'
+        PRINT = 'print'
         ID = 'uid'
 
 class UserCommands:
@@ -73,7 +73,7 @@ class UserCommands:
     NAME = 'name'
 
 class CheckCommand:
-    COMMAND = 'check'
+    CHECK = 'check'
     PRIORITY = 'priority'
     STATUS = 'status'
     ID = 'uid'
@@ -133,7 +133,7 @@ def get_parser():
     plan_parser = object_subparsers.add_parser(PlanCommands.PLAN, help='to manage plan objects')
 
     # CHECK COMMAND
-    check_parser = object_subparsers.add_parser(CheckCommand.COMMAND, help='check actual tasks')
+    check_parser = object_subparsers.add_parser(CheckCommand.CHECK, help='check actual tasks')
     check_parser.add_argument('-s','--status', dest=CheckCommand.STATUS,
                               choices=[TaskStatus.ACTIVE,
                                        TaskStatus.COMPLETE],
@@ -153,12 +153,12 @@ def get_parser():
     task_subparsers = task_parser.add_subparsers(dest=ParserCommands.SUBCOMMAND)
 
     # TASK ADD
-    add_task_parser = task_subparsers.add_parser(TaskCommands.AddSubcommand.COMMAND, help='add new task')
+    add_task_parser = task_subparsers.add_parser(TaskCommands.AddSubcommand.ADD, help='add new task')
     add_task_parser.add_argument(TaskAttributes.TITLE,  help='title of a new task')
     add_task_optional_attributes(add_task_parser)
 
     # TASK EDIT
-    edit_task_parser = task_subparsers.add_parser(TaskCommands.EditSubcommand.COMMAND, help='edit some attributes of existing task')
+    edit_task_parser = task_subparsers.add_parser(TaskCommands.EditSubcommand.EDIT, help='edit some attributes of existing task')
     edit_task_parser.add_argument(TaskCommands.EditSubcommand.ID,type=valid_uuid, help='id of task to be edited')
     edit_task_subparsers = edit_task_parser.add_subparsers(dest=TaskCommands.EditSubcommand.EDIT_KIND, help='set,add, remove')
     set_edit_parser = edit_task_subparsers.add_parser(TaskCommands.EditSubcommand.SET, help='set title, status, priority, time')
@@ -213,14 +213,14 @@ def get_parser():
                                    action='store_true', help='print whole the info about a task')
 
     # TASK FIND
-    find_parser = task_subparsers.add_parser(TaskCommands.FindSubcommand.COMMAND, help='find task by arguments')
+    find_parser = task_subparsers.add_parser(TaskCommands.FindSubcommand.FIND, help='find task by arguments')
     find_parser.add_argument('-t', '--title', dest=TaskAttributes.TITLE, help='find task by title')
     add_task_optional_attributes(find_parser)
 
     plan_subparsers = plan_parser.add_subparsers(dest=ParserCommands.SUBCOMMAND)
 
     # PLAN ADD
-    add_plan_parser = plan_subparsers.add_parser(PlanCommands.AddSubcommand.COMMAND,
+    add_plan_parser = plan_subparsers.add_parser(PlanCommands.AddSubcommand.ADD,
                                                  help='new periodic plan for existing task')
     fixed_period_group = add_plan_parser.add_mutually_exclusive_group(required=True)
     fixed_period_group.add_argument('-fixed', dest=PlanCommands.AddSubcommand.FIXED,
