@@ -71,12 +71,13 @@ class TasksManagerTestCase(unittest.TestCase):
 
         self.assertDictEqual(two_tasks, {self.task_starts_at_check_id: self.task_starts_at_check, self.task_late_id: self.task_late})
 
-    def test_select_actuals(self):
+    def test_select_actual_tasks(self):
         actuals = self.tasks_manager.select_actual_tasks(time=self.CHECK_TIME)
         self.assertDictEqual(actuals['continuing'], {self.task_around_check_id: self.task_around_check})
         self.assertDictEqual(actuals['starting'], {self.task_starts_at_check_id: self.task_starts_at_check})
         self.assertDictEqual(actuals['ending'], {self.task_ends_at_check_id: self.task_ends_at_check})
 
+    def test_select_actual_reminders(self):
         reminders = self.tasks_manager.select_actual_reminders(self.CHECK_TIME)
         self.assertCountEqual(reminders, [self.task_ends_at_check, self.task_starts_at_check])
 
