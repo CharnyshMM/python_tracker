@@ -47,7 +47,11 @@ class TasksManagerTestCase(unittest.TestCase):
         self.task_around_check = None
         self.task_starts_at_check_id = None
         self.task_around_check_id = None
+        self.task_late = None
+        self.task_late_id = None
         self.tasks_manager = None
+        self.task_ends_at_check = None
+        self.task_ends_at_check_id = None
 
     def test_create_task(self):
         self.assertListEqual(self.task_starts_at_check.get_attribute(TaskAttributes.SUBTASKS), [self.task_late_id])
@@ -68,7 +72,6 @@ class TasksManagerTestCase(unittest.TestCase):
 
     def test_find(self):
         two_tasks = self.tasks_manager.find_task(attributes={TaskAttributes.AUTHOR:self.USER_1})
-
         self.assertDictEqual(two_tasks, {self.task_starts_at_check_id: self.task_starts_at_check, self.task_late_id: self.task_late})
 
     def test_select_actual_tasks(self):
