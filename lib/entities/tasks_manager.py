@@ -1,4 +1,4 @@
-r""" Task manager module contains a single TasksManager class"""
+""" Task manager module contains a single TasksManager class"""
 
 from lib.entities.task import *
 import datetime as dt
@@ -8,7 +8,7 @@ from lib.entities.exceptions import EndTimeOverflowError, SubtasksNotRemovedErro
 
 
 class TasksManager:
-    r"""
+    """
     This class stores tasks in an inner dict and manages connections between them.
     Helps to safely add,remove, edit and search for a task
     """
@@ -23,9 +23,9 @@ class TasksManager:
         r"""
         Function to add a new task to others. Checks if the task doesn't conflict with existing ones and
         manages connections for parent and children if specified in the new task
-        :param new_task: a new task to add
-        :param user: a user who has permissions to edit the new task, its parent and children
-        :return: None
+        new_task: a new task to add
+        user: a user who has permissions to edit the new task, its parent and children
+        returns: None
         """
         if new_task.has_attribute(TaskAttributes.PARENT):
             parent_id = new_task.attributes[TaskAttributes.PARENT]
@@ -138,12 +138,12 @@ class TasksManager:
 
     @log_decorator
     def select_actual_tasks(self, time, delta=None):
-        r"""
+        """
         Select actual tasks from inner dict. Actualness is based on specified date(+/- delta).
         if delta is None delta = 5 minutes
-        :param time: datetime.datetime
-        :param delta: datetime.timedelta
-        :return: dict {'starting': {}, 'continuing': {}, 'ending':{}}
+        time: datetime.datetime
+        delta: datetime.timedelta
+        returns dict {'starting': {}, 'continuing': {}, 'ending':{}}
         """
         if delta is None:
             delta = dt.timedelta(minutes=5)
@@ -165,12 +165,12 @@ class TasksManager:
 
     @log_decorator
     def select_actual_reminders(self,date, delta=None):
-        r"""
+        """
         Selects tasks with reminders actual on specified date(+/- delta).
         if delta is None delta = 5 minutes
-        :param time: datetime.datetime
-        :param delta: datetime.timedelta
-        :return: dict of tasks that have actual reminders
+         time: datetime.datetime
+         delta: datetime.timedelta
+        return: dict of tasks that have actual reminders
         """
         if delta is None:
             delta = dt.timedelta(minutes=5)
@@ -198,8 +198,8 @@ class TasksManager:
         Generates a key_function(task)
         It checks equalty of all attributes values specified in search_keys_dict to corresponding attribute values of
         task. And returns True if all are equal and False otherwice.
-        :param search_keys_dict: attribute - value dict
-        :return: key_fuction
+         search_keys_dict: attribute - value dict
+        returns: key_fuction
         """
         def filter_function(task):
             for k, v in search_keys_dict.items():
@@ -220,9 +220,9 @@ class TasksManager:
     def child_end_time_suits_parent(parent, child):
         """
         Checks if parent's end time is greater that child's one
-        :param parent: parent Task
-        :param child: child Task
-        :return: Boolean (True|False)
+        parent: parent Task
+        child: child Task
+        returns Boolean (True|False)
         """
         child_end_time = child.try_get_attribute(TaskAttributes.END_TIME)
         parent_end_time = parent.try_get_attribute(TaskAttributes.END_TIME)

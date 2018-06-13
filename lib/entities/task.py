@@ -5,20 +5,19 @@ from uuid import uuid1
 import copy
 
 
-
 class TaskAttributes:
-    r"""
+    """
         Class that just stores single Task attributes
         TITLE - a title of task(Can't be None)
         SUBTASKS - child tasks connected to a task. They can't end later than their parent
         PARENT - id of parent task
         TAGS - user defined key_words
-        STARTTIME - when the task starts
+        START_TIME - when the task starts
         END_TIME - when the task ends
-        REMINS_TIMES - list of times when to remind about the task
+        REMIND_TIMES - list of times when to remind about the task
         AUTHOR - a username of him who created a task(Can't be None)
         CAN_EDIT - list of usernames who can make changes in task
-        STATUS - one of fixed TaskStatus sttuses
+        STATUS - one of fixed TaskStatus statuses
         PRIORITY - one of fixed in TaskPriority priorities
         UID - unique id of a task
         PLAN - id of PeriodicPlan object if this task was created automatically by it
@@ -62,8 +61,14 @@ class TaskPriority:
             return 'LOW'
 
 class Task:
-    def __init__(self, title, author, uid=None, start_time=None, remind_times=None,
-                 end_time=None, status=TaskStatus.ACTIVE, priority=TaskPriority.MEDIUM, parent=None, subtasks=None, plan=None, can_edit=None, tags=None):
+    def __init__(self, title, author, uid=None, start_time=None, remind_times=None, end_time=None,
+                 status=TaskStatus.ACTIVE, priority=TaskPriority.MEDIUM, parent=None, subtasks=None,
+                 plan=None, can_edit=None, tags=None):
+        """Init function.
+        title and author are required for every task.
+        uid parameter should be passed only when you try to instantize the task thas's already created
+        somehow. For examlpe when getting a task from DB.
+        """
         self.attributes = {TaskAttributes.TITLE: title,
                            TaskAttributes.AUTHOR: author,
                            TaskAttributes.STATUS: status,

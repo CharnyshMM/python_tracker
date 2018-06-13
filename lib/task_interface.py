@@ -6,10 +6,13 @@ from lib.entities.plans_manager import PlansManager
 from lib.logger import log_decorator
 
 
-
 class Interface:
-    """Interface class is designed to unite and encapsulate all the tasks and plans processing operations
-        and provide convenient interface to operate with commands"""
+    """
+
+    Interface class is designed to unite and encapsulate all the tasks and plans processing operations
+    and provide convenient interface to operate with commands
+    """
+
     @log_decorator
     def __init__(self, db_adapter, user):
         self.current_user = user
@@ -119,10 +122,11 @@ class Interface:
     def check_plans(self):
         new_tasks = self.plans_manager.get_updates()
         for task in new_tasks:
-            self.tasks_manager.create_new_task(task, self.current_user)
+            self.tasks_manager.create_new_task(task, task.get_attribute(TaskAttributes.AUTHOR))
         self.db.put_all_tasks(self.tasks_manager.tasks)
         self.db.put_all_plans(self.plans_manager.plans)
 
+    @log_decorator
     def complete_task(self,task_id):
         task = self.tasks_manager.get_task(task_id)
         task.set_attribute(TaskAttributes.STATUS, TaskStatus.COMPLETE, self.current_user)

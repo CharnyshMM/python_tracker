@@ -5,6 +5,12 @@ from lib.entities.plan import *
 
 
 class JsonStorage:
+    r"""
+
+    The Json DB for storing tasks and plans.
+    Provides static to/from json dictionary conversions and file i/o methods
+    """
+
     def __init__(self, file):
         self.file = file
 

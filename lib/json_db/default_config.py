@@ -1,3 +1,5 @@
+"""Default paths for storing DB files"""
+
 import os
 
 DEFAULT_STORAGE_DIR = os.path.join(os.environ['HOME'], 'py_tracker')
