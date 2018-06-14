@@ -7,7 +7,7 @@ import calendar
 import copy
 from lib.entities.task import TaskAttributes
 from uuid import uuid1
-from lib.entities.exceptions import NoTimeValueError
+from lib.entities.exceptions import NoTimeValueError,SubtasksNotRemovedError
 
 
 
@@ -97,7 +97,7 @@ class Period:
 class PeriodicPlan:
 
     """
-    The core class for dealing with plans.
+    A class for dealing with plans.
     Its instance describes a plan with:
         - template of periodic task
         - period of repetition
@@ -109,8 +109,12 @@ class PeriodicPlan:
     def __init__(self, period, task_template, task_id, user, uid=None, end_time=None, last_update_time = None):
         self.period = period
         self.task_template = copy.copy(task_template)
+
         if self.task_template.try_get_attribute(TaskAttributes.START_TIME) is None:
             raise NoTimeValueError
+        if self.task_template.try_get_attribute(TaskAttributes.SUBTASKS) is not None:
+            raise SubtasksNotRemovedError()
+
         self.task_id = task_id
         self.user = user
         if uid is not None:
@@ -118,6 +122,7 @@ class PeriodicPlan:
         else:
             self.uid = uuid1()
         self.task_template.set_attribute(TaskAttributes.PLAN, self.uid, user)
+        self.task_template.set_attribute(TaskAttributes.AUTHOR,user,user)
         self.end_time = end_time
         self.last_update_time = last_update_time
 
