@@ -88,14 +88,17 @@ def valid_date(date_str):
     try:
         if date_str is None:
             return None
+
         if date_str == 'now':
             time_now = dt.datetime.now()
             return dt.datetime(year=time_now.year, month=time_now.month, day=time_now.day, hour=time_now.hour,
                                minute=time_now.minute)
+
         return dt.datetime.strptime(date_str, "%d/%m/%y %H:%M")
     except ValueError:
         msg = "Not a valid date: '{0}'.".format(date_str)
         raise argparse.ArgumentTypeError(msg)
+
 
 def valid_uuid(uuid_str):
     try:
@@ -104,8 +107,10 @@ def valid_uuid(uuid_str):
         msg = "Not a valid ID '{}'".format(uuid_str)
         raise argparse.ArgumentTypeError(msg)
 
+
 def parse_period(command_dict):
     """Parse plan period input"""
+
     if command_dict[PlanCommands.AddSubcommand.FIXED] is not None:
         return command_dict[PlanCommands.AddSubcommand.FIXED]
     if command_dict[PlanCommands.AddSubcommand.DAYS] is not None:

@@ -1,21 +1,20 @@
 """Main module of console interface. main() function is the entry point for the app"""
 
-
-from lib.entities.task import TaskAttributes
 from lib.entities.exceptions import EndTimeOverflowError, SubtasksNotRemovedError, NoTimeValueError
-from json_db.interface import DB
-from lib.task_interface import Interface
+from lib.json_db.interface import DB
+from lib.interface import Interface
 import console_interface.printers as printers
 from console_interface.config_manager import ConfigManager
 from lib.logger import get_logger
 from console_interface.command_parser import *
-
+from console_interface.log_config import configure_logger
 
 def main():
     """ The function is the entry point to the Py_Tracker app.
         It calls the parser and processes the parser output."""
 
     logger = get_logger().getChild('console_main')
+    configure_logger(logger)
     logger.info('Started')
 
     parser = get_parser()
@@ -163,6 +162,8 @@ def main():
                     inteface.add_periodic_plan(period, task_template, task_id, end_time)
                 except NoTimeValueError:
                     print("! Oh! Task '{}' has no start time specified. Can't set up a plan for it".format(task_id))
+                except SubtasksNotRemovedError:
+                    print("! Oh! Plans can only work correctly with tasks without subtasks. Please try another task ")
                 inteface.check_plans()
 
             elif subcommand == PlanCommands.RemoveSubcommand.RM:
