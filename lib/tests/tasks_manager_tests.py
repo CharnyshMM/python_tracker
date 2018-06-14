@@ -1,5 +1,6 @@
 import unittest
-from lib.entities.tasks_manager import *
+from lib.entities.tasks_manager import TasksManager
+from lib.entities.task import Task,TaskAttributes
 from lib.entities.exceptions import *
 import datetime
 
@@ -14,7 +15,7 @@ class TasksManagerTestCase(unittest.TestCase):
     TIMEDELTA = datetime.timedelta(minutes=30)
 
     def setUp(self):
-        # setting up self.tasks_... for testing
+        # setting up tasks
         self.task_starts_at_check = Task(title=self.TITLE_1, author=self.USER_1, start_time=self.CHECK_TIME,
                                          end_time=self.CHECK_TIME + 4 * self.TIMEDELTA)
         self.task_starts_at_check_id = self.task_starts_at_check.get_attribute(TaskAttributes.UID)
@@ -53,11 +54,22 @@ class TasksManagerTestCase(unittest.TestCase):
         self.task_ends_at_check = None
         self.task_ends_at_check_id = None
 
-    def test_create_task(self):
-        self.assertListEqual(self.task_starts_at_check.get_attribute(TaskAttributes.SUBTASKS), [self.task_late_id])
+    def test_parent_task_time_check(self):
+        self.assertCountEqual(self.task_starts_at_check.get_attribute(TaskAttributes.SUBTASKS), [self.task_late_id])
         self.task_late.set_attribute(TaskAttributes.PARENT, self.task_around_check_id, self.USER_1)
         with self.assertRaises(EndTimeOverflowError):
             self.tasks_manager.create_new_task(self.task_late, self.USER_2)
+
+    def test_tasks_attributes_unchanged(self):
+        task = self.tasks_manager.get_task(self.task_starts_at_check_id)
+        self.assertEqual(task.get_attribute(TaskAttributes.TITLE),
+                         self.task_starts_at_check.get_attribute(TaskAttributes.TITLE))
+        self.assertEqual(task.get_attribute(TaskAttributes.AUTHOR),
+                         self.task_starts_at_check.get_attribute(TaskAttributes.AUTHOR))
+        self.assertEqual(task.get_attribute(TaskAttributes.START_TIME),
+                         self.task_starts_at_check.get_attribute(TaskAttributes.START_TIME))
+        self.assertEqual(task.get_attribute(TaskAttributes.END_TIME),
+                         self.task_starts_at_check.get_attribute(TaskAttributes.END_TIME))
 
     def test_remove_task(self):
         self.tasks_manager.remove_task(self.task_late_id, self.USER_1)

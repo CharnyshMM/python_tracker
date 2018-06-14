@@ -62,9 +62,5 @@ class PlanTestCase(unittest.TestCase):
         self.assertTrue(minutes_task_correct and day_1_task_correct and day_2_task_correct)
 
 
-
-
-
-
 if __name__ == '__main__':
     unittest.main()

@@ -96,6 +96,20 @@ class PlanTestCase(unittest.TestCase):
         tasks_delta = start_time - previous_start_time
         self.assertTrue(tasks_delta > future_delta >= dt.timedelta(0))
 
+    def test_task_attributes_unchanged(self):
+        plan = PeriodicPlan(period=self.MINUTES_PERIOD,
+                            task_template=self.minutes_task,
+                            task_id=self.minutes_task_id,
+                            user=self.USER)
+        next_task = plan.get_next_periodic_task()
+        self.assertEqual(next_task.get_attribute(TaskAttributes.TITLE),
+                         self.minutes_task.get_attribute(TaskAttributes.TITLE))
+        self.assertEqual(next_task.get_attribute(TaskAttributes.AUTHOR), self.USER)
+        self.assertEqual(self.minutes_task.get_attribute(TaskAttributes.AUTHOR), self.AUTHOR)
+        self.assertCountEqual(next_task.get_attribute(TaskAttributes.CAN_EDIT),
+                              self.minutes_task.get_attribute(TaskAttributes.CAN_EDIT))
+
+
 
 
 

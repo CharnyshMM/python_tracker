@@ -1,6 +1,6 @@
 import unittest
 import datetime as dt
-from lib.task_interface import Interface
+from lib.interface import Interface
 from lib.entities.task import Task, TaskAttributes, TaskStatus
 from lib.db_adapter import DBAdapter
 
@@ -80,6 +80,7 @@ class InterfaceTestCase(unittest.TestCase):
         self.interface.complete_task(self.task_starts_at_check_id)
         status = self.interface.get_task(self.task_starts_at_check_id).get_attribute(TaskAttributes.STATUS)
         self.assertTrue(status == TaskStatus.COMPLETE)
+
 
 if __name__ == '__main__':
     unittest.main()
