@@ -95,7 +95,7 @@ class Task:
         if can_edit is not None:
             self.attributes[TaskAttributes.CAN_EDIT] = can_edit
             if author not in can_edit:
-                self.__add_to_list_attribute(TaskAttributes.CAN_EDIT,can_edit)
+                self.__add_to_list_attribute(TaskAttributes.CAN_EDIT, author)
         else:
             self.__set_attribute(TaskAttributes.CAN_EDIT, [author])
 
