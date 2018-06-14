@@ -12,5 +12,6 @@ setup(
     license='',
     author='mikita',
     author_email='',
-    description='task tracker library and console interface for it'
+    description='task tracker library and console interface for it',
+    test_suite='lib.tests'
 )
