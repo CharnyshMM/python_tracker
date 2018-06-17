@@ -45,7 +45,7 @@ def main():
         if command == ParserObjects.TASK:
             if subcommand == TaskCommands.AddSubcommand.ADD:
                 try:
-                    task_id = inteface.add_task(**command_dict)
+                    task_id = inteface.create_task(**command_dict)
                     print("Task created. Its ID is {}".format(str(task_id)))
                 except EndTimeOverflowError as e:
                     print("! Oh! The subtask can't end later than its parent. Please check task id {}".format(e.args))
@@ -78,6 +78,18 @@ def main():
                         try:
                             date = command_dict[TaskAttributes.END_TIME]
                             inteface.task_set_attribute(task_id, TaskAttributes.END_TIME, date)
+                        except EndTimeOverflowError:
+                            print("! Oh! The end time conflicts with the start time or with parent task end time")
+
+                elif command_dict[TaskCommands.EditSubcommand.EDIT_KIND] == TaskCommands.EditSubcommand.UNSET:
+                    if command_dict[TaskAttributes.START_TIME]:
+                        try:
+                            inteface.task_set_attribute(task_id,TaskAttributes.START_TIME,None)
+                        except EndTimeOverflowError:
+                            print("! Oh! The start time conflicts with task end time")
+                    elif command_dict[TaskAttributes.END_TIME]:
+                        try:
+                            inteface.task_set_attribute(task_id,TaskAttributes.END_TIME,None)
                         except EndTimeOverflowError:
                             print("! Oh! The end time conflicts with the start time or with parent task end time")
 
