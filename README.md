@@ -16,7 +16,9 @@ the classes provided in library to create your own cool projects.
 
 ## Installing
 Clone the repo and install the setup.py. Python 3 required.
-
+    
+    git clone https://charnysh@bitbucket.org/charnysh/python_tracker.git
+    
 Navigate to the directory, containing the files you've downloaded adn run this:
 
     $ python3 setup.py install
@@ -63,13 +65,13 @@ You can print one task by specifying its id to the task print command:
 There are much more task options that can be set at the time of creating a task. For example, let us create another task
 that has a start date:
 
-    $ py_tracker task add 'My second task' -starts '12/6/2018 13:23'  
+    $ py_tracker task add 'My second task' --starts '12/6/2018 13:23'  
 
 Note that the date format 'dd/mm/yy hh:mm' is the only format the program understands. It'll notify you if your
 date was not recognised. And if you want to quickly set some time attribute with the current time & date you can
 just type `now`:
 
-    $ py_tracker task add 'Right now task' -starts now
+    $ py_tracker task add 'Right now task' --starts now
     
 And, finally, if you don't specify a date, the program will treat the task as having no time limits.
 
@@ -83,29 +85,29 @@ The task id is needed when you want to make changes to a particular task. Let's 
 the task attributes can be set at a step of creating task and not all the attributes can be edited afterwards).
 Instead of `'.....-.....-.....-.....'` put id of task you'd like to make changes to. 
 
-    $ py_tracker task edit '.....-.....-.....-.....' set -status complete 
+    $ py_tracker task edit '.....-.....-.....-.....' set --status complete 
     
 Every task can have multiple (or none) tags. Tags can be used to unite completely different tasks. Tag is just a user 
 defined string. And since task can have multiple tags `edit add` and `edit rm` commands are used to set and unset 
 such attributes.
 
-    $ py_tracker task edit '.....-.....-.....-.....' add -tag buy_when_shopping
+    $ py_tracker task edit '.....-.....-.....-.....' add --tag buy_when_shopping
     
 You can use find command to list tasks with required tags. The command below searches for tasks with tasks _Camping_, _Summer_
 
-    $ py_tracker task find -tags Camping Summer
+    $ py_tracker task find --tags Camping Summer
     
 There are also Reminders. Every task can have multiple reminders set. They are just a time records that tell program
 when to notify you about them. They can be set on a step of creating a new task or added later:
 
-    $ py_tracker task edit '.....-.....-.....-.....' add -reminder '14/6/18 23:23'
+    $ py_tracker task edit '.....-.....-.....-.....' add --reminder '14/6/18 23:23'
 
 ### Tasks hierarchy
 
 Py_Tracker can help you with organising tasks hierarchy. You can add subtasks to existing tasks. This is specified 
 at a time of creating a new task with `task add` command. Look at the example (`'.....-.....-.....-.....'` is parent task id):
 
-    $ py_tracker task add 'Sub Task Name' -parent '.....-.....-.....-.....' .
+    $ py_tracker task add 'Sub Task Name' --parent '.....-.....-.....-.....' .
     
 You can also specify all the attributes the task can have. The only limitation there exists is that your subtasks can't end 
 later than their parent task.
@@ -133,15 +135,15 @@ report.
 You can set periodical repetitions for existing tasks. If you set one the program will track it and when the time period
 you've set runs out it will automatically create a new task that has the same attributes the previous task has but all the 
 times and dates are moved forward exactly on a period.
-Imagine you have already created a task with id '.....-.....-.....-.....'. Now let's set a plan to repeat the task every 3 hours and stops doing so
+Imagine you have already created a task with id '.....-.....-.....-.....'. Now let's set a plan to repeat the task every 3 hours and stop repeating
 in '14/6/18 23:39'
 So we need to add a plan:
 
-    $ py_tracker plan add '.....-.....-.....-.....' -hours 3 -finish '14/6/18 23:39'
+    $ py_tracker plan add '.....-.....-.....-.....' --hours 3 --finish '14/6/18 23:39'
     
 And each time we run `check` command the program will check if this plan needs updates and if yes it will create a new task.
 You can add plans without setting finish time (it will never stop) or select another period. There are fixed periods: 
-`-fixed yearly` or `-fixed monthly` or `-fixed daily`. Or more adjustable ones `-days N`, `-hours N`, `-mins N` where N is the number 
+`--fixed yearly` or `--fixed monthly` or `--fixed daily`. Or more adjustable ones `--days N`, `--hours N`, `--mins N` where N is the number 
 you type in.
 
 Plans also have ids and also have their own print command
