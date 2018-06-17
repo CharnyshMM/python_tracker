@@ -4,7 +4,7 @@ from lib.entities.task import *
 import datetime as dt
 from lib.logger import *
 from lib.entities.exceptions import EndTimeOverflowError, SubtasksNotRemovedError
-
+from collections import OrderedDict
 
 
 class TasksManager:
@@ -19,8 +19,8 @@ class TasksManager:
         self.tasks = tasks
 
     @log_decorator
-    def create_new_task(self, new_task, user):
-        r"""
+    def add_new_task(self, new_task, user):
+        """
         Function to add a new task to others. Checks if the task doesn't conflict with existing ones and
         manages connections for parent and children if specified in the new task
         new_task: a new task to add
@@ -67,7 +67,7 @@ class TasksManager:
     @log_decorator
     def remove_with_subtasks(self,task_id,user):
         """
-        Forse to delete a task with all its subtasks
+        Force to delete a task with all its subtasks
         :param task_id: task id of task to be removed
         :param user: a user who has permissions to edit the new task, its parent and children
         :return: None
@@ -91,6 +91,26 @@ class TasksManager:
         return self.select_tasks_by_key(key_func)
 
     @log_decorator
+    def gather_subtasks(self, root_task_id, hierarchy_dict=None):
+        """
+        creates an hierarchy_dict that represents the hierarchy of tasks in task dict
+        :param root_task_id: top hierarchy task id
+        :param task_dict: all the tasks
+        :param hierarchy_dict: recursively filled dict
+        :return: hierarchy_dict
+        """
+        task = self.get_task(root_task_id)
+        if hierarchy_dict is None:
+            hierarchy_dict = OrderedDict()
+        hierarchy_dict[root_task_id] = (task, OrderedDict())
+        subtasks_ids = task.try_get_attribute(TaskAttributes.SUBTASKS)
+        if subtasks_ids is None:
+            return hierarchy_dict
+        for i in subtasks_ids:
+            self.gather_subtasks(i, hierarchy_dict[root_task_id][1])
+        return hierarchy_dict
+
+    @log_decorator
     def get_task(self, task_id):
         return self.tasks[task_id]
 
@@ -99,7 +119,7 @@ class TasksManager:
         return list(self.tasks.values())
 
     def edit_task_start_time(self,task_id,new_start_time, user):
-        r"""
+        """
         Checks arguments and safely edits a start time for a task stored in the tasks_manager
         :param task_id: id of task to be edited
         :param new_start_time: new datetime.datetime time
@@ -108,7 +128,10 @@ class TasksManager:
         """
         task = self.tasks[task_id]
         end_time = task.try_get_attribute(TaskAttributes.END_TIME)
-        if end_time is None or new_start_time < end_time:
+        if new_start_time is None:
+            if end_time is None:
+                task.unset_attribute(TaskAttributes.START_TIME)
+        elif end_time is None or new_start_time < end_time:
             task.set_attribute(TaskAttributes.START_TIME, new_start_time, user)
             return
         raise EndTimeOverflowError()
@@ -124,16 +147,23 @@ class TasksManager:
         task = self.tasks[task_id]
         start_time = task.try_get_attribute(TaskAttributes.START_TIME)
         parent_id = task.try_get_attribute(TaskAttributes.PARENT)
-        parent = self.tasks.get(parent_id,None)
+        parent = self.tasks.get(parent_id, None)
         parent_end_time = None
         if parent is not None:
             parent_end_time = parent.try_get_attribute(TaskAttributes.END_TIME)
 
-        parent_independent = (parent_id is None or parent_end_time is None or parent_end_time >= new_end_time)
-        start_time_correct = start_time is None or start_time < new_end_time
-        if parent_independent and start_time_correct:
-            task.set_attribute(TaskAttributes.END_TIME, new_end_time, user)
+        parent_never_ends = parent_id is None or parent_end_time is None
+        if new_end_time is None and parent_never_ends:
+            task.unset_attribute(TaskAttributes.END_TIME, user)
             return
+
+        if new_end_time is not None:
+            parent_independent = (parent_never_ends or parent_end_time >= new_end_time)
+            start_time_correct = start_time is None or start_time < new_end_time
+            if parent_independent and start_time_correct:
+                task.set_attribute(TaskAttributes.END_TIME, new_end_time, user)
+                return
+
         raise EndTimeOverflowError()
 
     @log_decorator
@@ -196,10 +226,10 @@ class TasksManager:
     def key_function_builder(search_keys_dict):
         """
         Generates a key_function(task)
-        It checks equalty of all attributes values specified in search_keys_dict to corresponding attribute values of
+        It checks equality of all attributes values specified in search_keys_dict to corresponding attribute values of
         task. And returns True if all are equal and False otherwice.
          search_keys_dict: attribute - value dict
-        returns: key_fuction
+        returns: key_function
         """
         def filter_function(task):
             for k, v in search_keys_dict.items():
