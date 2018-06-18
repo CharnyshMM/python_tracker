@@ -1,4 +1,4 @@
-from lib.entities.plan import PeriodicPlan,Period
+from lib.entities.plan import PeriodicPlan, Period
 from lib.entities.plans_manager import PlansManager
 from lib.entities.task import Task, TaskAttributes
 import datetime as dt
@@ -15,13 +15,13 @@ class PlanTestCase(unittest.TestCase):
 
     def setUp(self):
         self.plans_manager = PlansManager()
-        self.minutes_task_start_time = start_time = dt.datetime.now()
+        self.minutes_task_start_time = dt.datetime.now()
         self.minutes_task = Task(self.TITLE+"min", self.AUTHOR, start_time=self.minutes_task_start_time)
         self.minutes_task_id = self.minutes_task.get_attribute(TaskAttributes.UID)
         self.minutes_plan = PeriodicPlan(self.MINUTES_DELTA, self.minutes_task, self.minutes_task_id, self.AUTHOR)
         self.plans_manager.add_plan(self.minutes_plan)
 
-        self.day_task_start_time = start_time=dt.datetime.now() - 4 * self.DAY_DELTA
+        self.day_task_start_time = dt.datetime.now() - 4 * self.DAY_DELTA
         self.day_task = Task(self.TITLE+"day", self.AUTHOR, start_time=self.day_task_start_time)
         self.day_task_id = self.day_task.get_attribute(TaskAttributes.UID)
         self.day_plan = PeriodicPlan(self.DAY_DELTA, self.day_task, self.day_task_id, self.AUTHOR,
@@ -60,6 +60,12 @@ class PlanTestCase(unittest.TestCase):
                 unknown = True
         self.assertFalse(unknown)
         self.assertTrue(minutes_task_correct and day_1_task_correct and day_2_task_correct)
+
+    def test_find_plan_by_taskid(self):
+        found = self.plans_manager.find_plans_for_task(self.minutes_task_id)
+        self.assertEqual([self.minutes_plan], found)
+        found = self.plans_manager.find_plans_for_task(self.day_task_id)
+        self.assertEqual([self.day_plan], found)
 
 
 if __name__ == '__main__':
