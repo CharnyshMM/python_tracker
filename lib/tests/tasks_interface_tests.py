@@ -63,7 +63,7 @@ class InterfaceTestCase(unittest.TestCase):
         self.db_emulator = None
 
     def test_add_task(self):
-        task_id = self.interface.add_task(title=self.TITLE_3,start_time=self.CHECK_TIME + self.TIMEDELTA)
+        task_id = self.interface.create_task(title=self.TITLE_3, start_time=self.CHECK_TIME + self.TIMEDELTA)
         self.assertTrue(task_id in self.db_emulator.tasks_storage)
 
     def test_db_equalty_task(self):

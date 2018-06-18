@@ -35,8 +35,8 @@ class TasksManagerTestCase(unittest.TestCase):
         # setting up self.tasks_manager
         self.tasks_manager = TasksManager({self.task_starts_at_check_id: self.task_starts_at_check,
                                            self.task_around_check_id: self.task_around_check})
-        self.tasks_manager.create_new_task(self.task_late, self.USER_1)
-        self.tasks_manager.create_new_task(self.task_ends_at_check, self.USER_2)
+        self.tasks_manager.add_new_task(self.task_late, self.USER_1)
+        self.tasks_manager.add_new_task(self.task_ends_at_check, self.USER_2)
         self.task_ends_at_check.add_to_attribute(TaskAttributes.REMIND_TIMES, self.CHECK_TIME + self.TIMEDELTA / 30,
                                                  self.USER_2)
         self.task_starts_at_check.add_to_attribute(TaskAttributes.REMIND_TIMES,
@@ -58,7 +58,7 @@ class TasksManagerTestCase(unittest.TestCase):
         self.assertCountEqual(self.task_starts_at_check.get_attribute(TaskAttributes.SUBTASKS), [self.task_late_id])
         self.task_late.set_attribute(TaskAttributes.PARENT, self.task_around_check_id, self.USER_1)
         with self.assertRaises(EndTimeOverflowError):
-            self.tasks_manager.create_new_task(self.task_late, self.USER_2)
+            self.tasks_manager.add_new_task(self.task_late, self.USER_2)
 
     def test_tasks_attributes_unchanged(self):
         task = self.tasks_manager.get_task(self.task_starts_at_check_id)
