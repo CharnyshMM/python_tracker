@@ -16,15 +16,16 @@ class PlansManager:
     def remove_plan(self,plan_id):
         self.plans.pop(plan_id)
 
-    def try_find_plan_for_task(self, task_id):
+    def find_plans_for_task(self, task_id):
         """
         Find a plan by task id of connected task. If not found returns None
         task_id:
         """
+        results = []
         for k,v in self.plans.items():
             if v.task_id == task_id:
-                return k
-        return None
+                results.append(v)
+        return results
 
     def get_updates(self):
         """Checks each plan if it needs update and if True, collects a new task from it.

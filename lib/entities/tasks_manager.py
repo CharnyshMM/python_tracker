@@ -93,11 +93,11 @@ class TasksManager:
     @log_decorator
     def gather_subtasks(self, root_task_id, hierarchy_dict=None):
         """
-        creates an hierarchy_dict that represents the hierarchy of tasks in task dict
+        creates an hierarchy_dict that represents the hierarchy of tasks starting in a given root task
         :param root_task_id: top hierarchy task id
-        :param task_dict: all the tasks
         :param hierarchy_dict: recursively filled dict
-        :return: hierarchy_dict
+        :return: hierarchy dictionary {uid: (Task, { uid: (Task, {}), uid: (Task, {}) } }
+        (each value is a tuple of a task and dict of its subtasks)
         """
         task = self.get_task(root_task_id)
         if hierarchy_dict is None:

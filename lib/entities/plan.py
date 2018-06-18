@@ -106,7 +106,7 @@ class PeriodicPlan:
     The instance could say if it needs an update and perform an update, returning new task
     """
 
-    def __init__(self, period, task_template, task_id, user, uid=None, end_time=None, last_update_time = None):
+    def __init__(self, period, task_template, task_id, user, uid=None, end_time=None, last_update_time=None):
         self.period = period
         self.task_template = copy.copy(task_template)
 
@@ -122,7 +122,7 @@ class PeriodicPlan:
         else:
             self.uid = uuid1()
         self.task_template.set_attribute(TaskAttributes.PLAN, self.uid, user)
-        self.task_template.set_attribute(TaskAttributes.AUTHOR,user,user)
+        self.task_template.set_attribute(TaskAttributes.AUTHOR, user, user)
         self.end_time = end_time
         self.last_update_time = last_update_time
 
