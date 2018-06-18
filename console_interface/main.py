@@ -1,4 +1,5 @@
 """Main module of console interface. main() function is the entry point for the app"""
+import sys
 
 from lib.entities.exceptions import EndTimeOverflowError, SubtasksNotRemovedError, NoTimeValueError
 from lib.json_db.interface import DB
@@ -19,6 +20,9 @@ def main():
 
     parser = get_parser()
     command_dict = vars(parser.parse_args())
+    if len(sys.argv) == 1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
     command = command_dict.pop(ParserCommands.COMMAND)
 
     logger.debug('command {}'.format(command))
@@ -48,9 +52,10 @@ def main():
                     task_id = inteface.create_task(**command_dict)
                     print("Task created. Its ID is {}".format(str(task_id)))
                 except EndTimeOverflowError as e:
-                    print("! Oh! The subtask can't end later than its parent. Please check task id {}".format(e.args))
+                    print("! Oh! The subtask can't end later than its parent. Please check task id {}".format(e.args),
+                          file=sys.stderr)
                 except ValueError:
-                    print("! Oh! The start time couldn't be less or than end time")
+                    print("! Oh! The start time couldn't be less or than end time", file=sys.stderr)
 
             elif subcommand == TaskCommands.EditSubcommand.EDIT:
                 task_id = command_dict[TaskCommands.EditSubcommand.ID]
@@ -72,26 +77,28 @@ def main():
                             date = command_dict[TaskAttributes.START_TIME]
                             inteface.task_set_attribute(task_id, TaskAttributes.START_TIME, date)
                         except EndTimeOverflowError:
-                            print("! Oh! The start time conflicts with task end time")
+                            print("! Oh! The start time conflicts with task end time", file=sys.stderr)
 
                     elif command_dict[TaskAttributes.END_TIME] is not None:
                         try:
                             date = command_dict[TaskAttributes.END_TIME]
                             inteface.task_set_attribute(task_id, TaskAttributes.END_TIME, date)
                         except EndTimeOverflowError:
-                            print("! Oh! The end time conflicts with the start time or with parent task end time")
+                            print("! Oh! The end time conflicts with the start time or with parent task end time",
+                                  file=sys.stderr)
 
                 elif command_dict[TaskCommands.EditSubcommand.EDIT_KIND] == TaskCommands.EditSubcommand.UNSET:
                     if command_dict[TaskAttributes.START_TIME]:
                         try:
                             inteface.task_set_attribute(task_id,TaskAttributes.START_TIME,None)
                         except EndTimeOverflowError:
-                            print("! Oh! The start time conflicts with task end time")
+                            print("! Oh! The start time conflicts with task end time", file=sys.stderr)
                     elif command_dict[TaskAttributes.END_TIME]:
                         try:
                             inteface.task_set_attribute(task_id,TaskAttributes.END_TIME,None)
                         except EndTimeOverflowError:
-                            print("! Oh! The end time conflicts with the start time or with parent task end time")
+                            print("! Oh! The end time conflicts with the start time or with parent task end time",
+                                  file=sys.stderr)
 
                 elif command_dict[TaskCommands.EditSubcommand.EDIT_KIND] == TaskCommands.EditSubcommand.ADD:
                     if command_dict[TaskAttributes.TAGS] is not None:
@@ -129,7 +136,8 @@ def main():
                         for k in command_dict[TaskAttributes.UID]:
                             inteface.remove_task(k)
                 except SubtasksNotRemovedError:
-                    print("! Oh! The task you're trying to delete has subtasks. Please remove them or use -f flag")
+                    print("! Oh! The task you're trying to delete has subtasks. Please remove them or use -f flag",
+                          file=sys.stderr)
 
             elif subcommand == TaskCommands.FindSubcommand.FIND:
                 tasks = list(inteface.find_tasks(**command_dict).values())
@@ -173,9 +181,11 @@ def main():
                 try:
                     inteface.add_periodic_plan(period, task_template, task_id, end_time)
                 except NoTimeValueError:
-                    print("! Oh! Task '{}' has no start time specified. Can't set up a plan for it".format(task_id))
+                    print("! Oh! Task '{}' has no start time specified. Can't set up a plan for it".format(task_id),
+                          file=sys.stderr)
                 except SubtasksNotRemovedError:
-                    print("! Oh! Plans can only work correctly with tasks without subtasks. Please try another task ")
+                    print("! Oh! Plans can only work correctly with tasks without subtasks. Please try another task ",
+                          file=sys.stderr)
                 inteface.check_plans()
 
             elif subcommand == PlanCommands.RemoveSubcommand.RM:
@@ -185,6 +195,11 @@ def main():
             elif subcommand == PlanCommands.PrintSubcommand.PRINT:
                 if command_dict[PlanCommands.PrintSubcommand.ID] is not None:
                     printers.simple_plan_printer(inteface.plans_manager.plans[command_dict[PlanCommands.PrintSubcommand.ID]])
+
+                elif command_dict[PlanCommands.PrintSubcommand.TASK_ID] is not None:
+                    for plan in inteface.get_plans_by_task_id(command_dict[PlanCommands.PrintSubcommand.TASK_ID]):
+                        printers.simple_plan_printer(plan)
+
                 else:
                     for k, v in inteface.plans_manager.plans.items():
                         printers.simple_plan_printer(v)
@@ -196,15 +211,16 @@ def main():
         return 0
     except PermissionError as e:
         logger.error(e)
-        print("! Oh! Permission denied for user: {}".format(inteface.current_user))
+        print("! Oh! Permission denied for user: {}".format(inteface.current_user), file=sys.stderr)
         return 1
     except KeyError as e:
         logger.error(e)
-        print("! Oh! The key {} can't be found. Please check if it is correct or if it exists".format(e))
+        print("! Oh! The key {} can't be found. Please check if it is correct or if it exists".format(e),
+              file=sys.stderr)
         return 1
     except Exception as e:
         logger.error(e)
-        print('! Oh! Something went wrong. Program quited')
+        print('! Oh! Something went wrong. Program quited', file=sys.stderr)
         return 1
 
 if __name__ == '__main__':

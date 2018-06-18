@@ -4,6 +4,7 @@ from lib.entities.task import TaskAttributes, TaskPriority
 from collections import OrderedDict
 import datetime as dt
 
+
 def task_satisfies(task, priority=None, status=None):
     if priority is None and status is None:
         return True
@@ -15,6 +16,7 @@ def task_satisfies(task, priority=None, status=None):
     if task_status is not None and status is not None and task_status != status:
         satisfies = False
     return satisfies
+
 
 def simple_task_printer(task, wide_print=False, indents=0):
     ind_str = ' | '*indents
@@ -62,7 +64,7 @@ def simple_plan_printer(plan):
     print('\n---- PLAN ----')
     print('ID: {}'.format(plan.uid))
     print('for Task: {}'.format(plan.task_template.get_attribute(TaskAttributes.TITLE)))
-    print('(Task ID: {})'.format(plan.task_template.get_attribute(TaskAttributes.UID)))
+    print('(Task ID: {})'.format(plan.task_id))
     print('Period: {}'.format(plan.period))
     print('Last appeared: {}'.format(plan.last_update_time))
     if plan.end_time is None:
@@ -109,6 +111,7 @@ def hierarchy_dict_printer(hierarchy_ids, task_dict, indents=0, wide_print=False
             simple_task_printer(task_dict[k],indents=indents, wide_print=wide_print)
         hierarchy_dict_printer(v, task_dict, indents=indents + 1, wide_print=wide_print, priority=priority, status=status)
 
+
 def hierarchy_printer(tasks_dict, date_sort_key=None, wide_print=False):
     """Builds a hierarchy for all the task in task_dict and prints them"""
     hier = OrderedDict()
@@ -118,6 +121,7 @@ def hierarchy_printer(tasks_dict, date_sort_key=None, wide_print=False):
             hier.update(gather_subtasks(v,ordered_tasks_dict))
     hierarchy_dict_printer(hier,ordered_tasks_dict, wide_print=wide_print)
 
+
 def simple_actual_tasks_printer(starting, continuing, ending, priority=None, status=None):
     print('\n========== ACTUAL REPORT ==========')
     starting_hierarchy = OrderedDict()
@@ -126,7 +130,6 @@ def simple_actual_tasks_printer(starting, continuing, ending, priority=None, sta
             starting_hierarchy.update(gather_subtasks(v,starting))
     print("=== STARTING TASKS ===")
     hierarchy_dict_printer(starting_hierarchy, starting, priority=priority, status=status)
-
 
     continuing_hierarchy = OrderedDict()
     for k,v in continuing.items():

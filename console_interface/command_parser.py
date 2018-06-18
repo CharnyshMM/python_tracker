@@ -1,6 +1,7 @@
 """This module has a get_parser method to return a complete console input parser and commands collections"""
 
 from lib.entities.task import TaskAttributes, TaskStatus
+from console_interface.parser import Parser
 import argparse
 import uuid
 import datetime as dt
@@ -19,7 +20,7 @@ class TaskCommands:
     class PrintSubcommand:
         PRINT = 'print'
         WIDE = 'w'
-        ID = 'id'  #change
+        ID = 'id'
         SUBTASKS = 's'
 
     class RemoveSubcommand:
@@ -66,6 +67,7 @@ class PlanCommands:
     class PrintSubcommand:
         PRINT = 'print'
         ID = 'uid'
+        TASK_ID = 'task_id'
 
 class UserCommands:
     USER = 'user'
@@ -130,7 +132,7 @@ def valid_positive(val):
 
 
 def get_parser():
-    parser = argparse.ArgumentParser(prog='py_tracker')
+    parser = Parser(prog='py_tracker')
     object_subparsers = parser.add_subparsers(dest='command',help='console interface for task tracker. '
                                                                   'Add, remove and plan tasks with it ;)')
     # OBJECT COMMANDS
@@ -231,6 +233,7 @@ def get_parser():
     find_parser = task_subparsers.add_parser(TaskCommands.FindSubcommand.FIND, help='find task by arguments')
     find_parser.add_argument('-t', '--title', dest=TaskAttributes.TITLE, help='find task by title')
     add_task_optional_attributes(find_parser)
+    find_parser.add_argument('--plan', dest=TaskAttributes.PLAN, type=valid_uuid, help='find task by plan')
 
     plan_subparsers = plan_parser.add_subparsers(dest=ParserCommands.SUBCOMMAND)
 
@@ -256,7 +259,11 @@ def get_parser():
 
     # PLAN PRINT
     print_plan_parser = plan_subparsers.add_parser('print', help='print all the plans')
-    print_plan_parser.add_argument('-id', dest=PlanCommands.PrintSubcommand.ID, type=valid_uuid, help='print single plan by ID')
+    plan_print_group = print_plan_parser.add_mutually_exclusive_group(required=False)
+    plan_print_group.add_argument('-id', dest=PlanCommands.PrintSubcommand.ID, type=valid_uuid,
+                                  help='print single plan by ID')
+    plan_print_group.add_argument('-tid','--taskid', dest=PlanCommands.PrintSubcommand.TASK_ID, type=valid_uuid,
+                                  help='print plans connected to the task')
 
     return parser
 
