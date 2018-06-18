@@ -11,6 +11,7 @@ class Interface:
 
     Interface class is designed to unite and encapsulate all the tasks and plans processing operations
     and provide convenient interface to operate with commands
+
     """
 
     @log_decorator
@@ -21,17 +22,23 @@ class Interface:
         self.plans_manager = PlansManager(self.db.get_all_plans())
 
     @log_decorator
-    def add_task(self, title, start_time=None, end_time=None, remind_times=None, status=None, parent=None,
-                 subtasks=None, tags=None, can_edit=None, priority=None):
+    def create_task(self, title, start_time=None, end_time=None, remind_times=None, status=None, parent=None,
+                    subtasks=None, tags=None, can_edit=None, priority=None):
         if priority is None:
             priority = TaskPriority.MEDIUM
         if status is None:
             status = TaskStatus.ACTIVE
         t = Task(title, self.current_user, start_time=start_time, end_time=end_time, remind_times=remind_times, status=status,
                  priority=priority, parent=parent, subtasks=subtasks, tags=tags, can_edit=can_edit)
-        self.tasks_manager.create_new_task(t,self.current_user)
+        self.tasks_manager.add_new_task(t, self.current_user)
         self.db.put_all_tasks(self.tasks_manager.tasks)
         return t.get_attribute(TaskAttributes.UID)
+
+    @log_decorator
+    def add_task(self, new_task):
+        self.tasks_manager.add_new_task(new_task, self.current_user)
+        self.db.put_all_tasks(self.tasks_manager.tasks)
+        return new_task.get_attribute(TaskAttributes.UID)
 
     @log_decorator
     def remove_task(self, task_id):
@@ -71,8 +78,12 @@ class Interface:
         self.db.put_all_tasks(self.tasks_manager.tasks)
 
     @log_decorator
-    def find_tasks(self, title=None, author=None, start_time=None,
-                   end_time=None, remind_times=None, parent=None, subtasks=None, tags=None, can_edit=None, status=None, priority=None ):
+    def find_tasks(self, title=None, author=None, start_time=None, end_time=None, remind_times=None, parent=None,
+                   subtasks=None, tags=None, can_edit=None, status=None, priority=None, plan=None):
+
+        """This method tries to find a task or tasks by passed parameters.
+        returns a dict of tashs"""
+
         attributes = {}
         if title is not None:
             attributes[TaskAttributes.TITLE] = title
@@ -94,6 +105,10 @@ class Interface:
             attributes[TaskAttributes.PRIORITY] = priority
         if status is not None:
             attributes[TaskAttributes.STATUS] = status
+        if can_edit is not None:
+            attributes[TaskAttributes.CAN_EDIT] = can_edit
+        if plan is not None:
+            attributes[TaskAttributes.PLAN] = plan
         return self.tasks_manager.find_task(attributes)
 
     @log_decorator
@@ -119,10 +134,14 @@ class Interface:
         self.db.put_all_plans(self.plans_manager.plans)
 
     @log_decorator
+    def get_plans_by_task_id(self, task_id):
+        return self.plans_manager.find_plans_for_task(task_id)
+
+    @log_decorator
     def check_plans(self):
         new_tasks = self.plans_manager.get_updates()
         for task in new_tasks:
-            self.tasks_manager.create_new_task(task, task.get_attribute(TaskAttributes.AUTHOR))
+            self.tasks_manager.add_new_task(task, task.get_attribute(TaskAttributes.AUTHOR))
         self.db.put_all_tasks(self.tasks_manager.tasks)
         self.db.put_all_plans(self.plans_manager.plans)
 
