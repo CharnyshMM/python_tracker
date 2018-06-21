@@ -1,11 +1,10 @@
 from django import forms
 from .models import TaskModel
 
-
 class TaskForm(forms.ModelForm):
     class Meta:
         model = TaskModel
-        fields = '__all__'
+        fields = ('title','start_time','end_time', 'editors')
         widgets = {
             'start_time': forms.DateTimeInput(),
             'end_time': forms.DateTimeInput()
