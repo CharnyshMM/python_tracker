@@ -1,20 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>All Tasks - Py_TrackerWeb</title>
-</head>
-<body>
-<p>Tasks list</p>
-<a href="{% url 'new_task' %}">Create new</a>
-{% if tasks_list %}
-    <ul>
-        {% for task in tasks_list %}
-            <li><a href="{% url 'detail_task' task.id %}">{{task.title}}</a></li>
-        {% endfor %}
-    </ul>
-{%else%}
-    <p>"No tasks in storage</p>
+{% extends 'tracker_app/base.html' %}
+
+{% block title %}Tasks list{% endblock %}
+
+{% block content%}
+    <p>Tasks list</p>
+    <a href="{% url 'new_task' 0 %}">Create new</a>
+    {% if tasks_list %}
+        <ul>
+            {% for task in tasks_list %}
+                <li><a href="{% url 'detail_task' task.id %}">{{task.title}}</a></li>
+            {% endfor %}
+        </ul>
+    {%else%}
+        <p>"No tasks in storage</p>
 {%endif%}
-</body>
-</html>
+{% endblock %}

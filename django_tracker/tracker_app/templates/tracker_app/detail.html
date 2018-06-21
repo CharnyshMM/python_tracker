@@ -1,12 +1,28 @@
 {% extends 'tracker_app/base.html' %}
+
+{% block title %}{{task.title}}{% endblock %}
 {% block content %}
     <h1>{{task.title}} task</h1>
-    <hr/>
-    <ul>
-        <li>Author: {{task.author}}</li>
-        <li>Starts: {{task.start_time}}</li>
-        <li>Ends: {{task.end_time}}</li>
-    </ul>
     <a href="{% url 'edit_task' task.id  %}">Edit</a>
     <a href="{% url 'delete_task' task.id %}">Delete</a>
+    <a href="{% url 'new_task' task.id %}">Create Subtask</a>
+    <hr/>
+    <ul>
+        <li><i>Author</i>: {{task.author}}</li>
+        <li><i>Starts</i>: {{task.start_time}}</li>
+        <li><i>Ends</i>: {{task.end_time}}</li>
+        <li><i>Parent</i>: {{task.get_parent.title}}</li>
+        <li><i>Editors</i>: {{task.editors}}</li>
+    </ul>
+    {% if subtasks %}
+        <h2>Subtasks:</h2>
+        <ol>
+        {% for subtask in subtasks%}
+
+                <li>{{subtask.title}}</li>
+
+        {% endfor %}
+        </ol>
+    {% endif %}
+
 {% endblock %}
