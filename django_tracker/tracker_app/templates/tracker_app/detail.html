@@ -1,0 +1,12 @@
+{% extends 'tracker_app/base.html' %}
+{% block content %}
+    <h1>{{task.title}} task</h1>
+    <hr/>
+    <ul>
+        <li>Author: {{task.author}}</li>
+        <li>Starts: {{task.start_time}}</li>
+        <li>Ends: {{task.end_time}}</li>
+    </ul>
+    <a href="{% url 'edit_task' task.id  %}">Edit</a>
+    <a href="{% url 'delete_task' task.id %}">Delete</a>
+{% endblock %}
