@@ -17,6 +17,7 @@ urlpatterns = [
     # /tracker_app/task/5/edit
     url(r'^task/(?P<task_id>\d+)/edit/$', view=views.edit_task, name='edit_task'),
     url(r'^task/(?P<task_id>\d+)/delete/$', view=views.delete_task, name='delete_task'),
+    url(r'^task/(?P<task_id>\d+)/new_plan/$',view=views.add_plan, name='new_plan'),
     # /tracker_app/thanks
     url(r'^thanks/$', view=views.thanks, name='thanks'),
 ]

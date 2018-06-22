@@ -1,17 +1,17 @@
 # Create your views here.
 from django.http import HttpResponse
-from .models import TaskModel
 from django.template import loader
+
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 
-
+from .forms import TaskForm, PlanForm
+from .models import TaskModel, PlanModel
 from functools import wraps
-from .forms import TaskForm
+
 
 
 def access_allowed(function):
@@ -92,6 +92,23 @@ def delete_task(request, task_id):
     task = get_object_or_404(TaskModel, pk=task_id)
     task.delete()
     return HttpResponseRedirect('/')
+
+
+@login_required
+@access_allowed
+def add_plan(request, task_id):
+    if request.method == "POST":
+        form = PlanForm(request.POST)
+        if form.is_valid():
+            task = TaskModel.objects.get(id=task_id)
+            plan = form.create_plan(task)
+            plan.save()
+            plan.update()
+            return redirect('index')
+    else:
+        form = PlanForm()
+    return render(request, 'tracker_app/plan_form.html', {'form': form})
+
 
 #===========================================
 #   AUTHENTICATION

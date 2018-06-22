@@ -51,7 +51,7 @@ class TaskModel(models.Model):
 class PlanModel(models.Model):
     task_template = models.ForeignKey(TaskModel, null=False)
     fixed_period = models.CharField(max_length=100, blank=True, null=True)
-    time_delta_period = models.DurationField(blank=True,  null=True)
+    timedelta_period = models.DurationField(blank=True, null=True)
     end_time = models.DateTimeField(blank=True, null=True)
     last_update_time = models.DateTimeField(blank=True, null=True)
     created_tasks = models.ManyToManyField(TaskModel, blank=True, related_name='children')
@@ -78,7 +78,7 @@ class PlanModel(models.Model):
         if self.fixed_period:
             return Period.add_timedelta(self.fixed_period, offset_time)
 
-        return Period.add_timedelta(self.time_delta_period, offset_time)
+        return Period.add_timedelta(self.timedelta_period, offset_time)
 
     def needs_update(self, cur_time):
         if self.last_update_time is None:
