@@ -13,17 +13,22 @@ from .forms import TaskForm
 
 @login_required
 def index(request):
-    tasks_list = TaskModel.objects.all()
+    authored_tasks = TaskModel.select_tasks_by_author(request.user)
+    edited_tasks = list(set(TaskModel.select_tasks_by_editor(request.user)) - set(authored_tasks))
     template = loader.get_template('tracker_app/index.html')
-    context = {'tasks_list': tasks_list}
+    context = {'authored_tasks': authored_tasks,'edited_tasks': edited_tasks}
     return HttpResponse(template.render(context, request))
 
 
 @login_required
 def detail(request, task_id):
     task = get_object_or_404(TaskModel, pk=task_id)
+    editor_names = []
+    for editor in task.editors.all():
+        editor_names.append(editor.username)
+
     subtasks = TaskModel.objects.filter(parent=task_id)
-    return render(request, 'tracker_app/detail.html', {'task': task, 'subtasks': subtasks})
+    return render(request, 'tracker_app/detail.html', {'task': task, 'subtasks': subtasks, 'editors': editor_names})
 
 
 @login_required
@@ -36,7 +41,12 @@ def new_task(request, task_id):
             if len(TaskModel.objects.filter(id=task_id))>0:
                 task.parent = TaskModel.objects.get(id=task_id)
             task.save()
-            return redirect('/')
+            users = form.cleaned_data.get('editors')
+            for u in users:
+                TaskModel.add_editor(task.id, u)
+
+
+            return redirect('index')
     else:
         form = TaskForm()
     return render(request, 'tracker_app/task_form.html', {'form': form})

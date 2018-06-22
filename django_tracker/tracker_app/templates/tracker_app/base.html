@@ -2,12 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"
+          integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+
+
     <title>{% block title%}{% endblock %}</title>
 </head>
 <body>
 <h3>Py Tracker Web Application</h3>
 {% if user.is_authenticated %}
-          You look great, {{ user.username }}!
+          You are {{ user.username }}!
           <a href="{% url 'logout' %}">Log Out</a>
 {% else %}
         Hi! Please <a href="{% url 'login' %}">Log In</a> or <a href="{% url 'signup' %}">Sign Up</a>

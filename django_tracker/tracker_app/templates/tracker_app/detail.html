@@ -3,23 +3,31 @@
 {% block title %}{{task.title}}{% endblock %}
 {% block content %}
     <h1>{{task.title}} task</h1>
-    <a href="{% url 'edit_task' task.id  %}">Edit</a>
-    <a href="{% url 'delete_task' task.id %}">Delete</a>
-    <a href="{% url 'new_task' task.id %}">Create Subtask</a>
+    <a href="{% url 'edit_task' task.id  %}">
+        <button type="button" class="btn btn-warning btn-sm">Edit</button>
+    </a>
+    <a href="{% url 'delete_task' task.id %}">
+        <button type="button" class="btn btn-danger btn-sm">Delete</button>
+    </a>
+    <a href="{% url 'new_task' task.id %}">
+        <button type="button" class="btn btn-info btn-sm">Create subtask</button>
+    </a>
     <hr/>
     <ul>
         <li><i>Author</i>: {{task.author}}</li>
         <li><i>Starts</i>: {{task.start_time}}</li>
         <li><i>Ends</i>: {{task.end_time}}</li>
-        <li><i>Parent</i>: {{task.get_parent.title}}</li>
-        <li><i>Editors</i>: {{task.editors}}</li>
+        {% if task.get_parent  %}
+            <li><i>Parent</i>: <a href="{% url 'detail_task' task.get_parent.id %}">{{task.get_parent.title}}</a></li>
+        {% endif %}
+        <li><i>Editors</i>: {{editors}}</li>
     </ul>
     {% if subtasks %}
         <h2>Subtasks:</h2>
         <ol>
         {% for subtask in subtasks%}
 
-                <li>{{subtask.title}}</li>
+            <li><a href="{% url 'detail_task' subtask.id %}"> {{subtask.title}} </a></li>
 
         {% endfor %}
         </ol>

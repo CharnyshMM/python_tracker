@@ -1,7 +1,6 @@
 from django.db import models
-
-# Create your models here.
 from django.contrib.auth.models import User
+from django.db.models import Q
 
 class TaskModel(models.Model):
     title = models.CharField(max_length=200)
@@ -24,14 +23,25 @@ class TaskModel(models.Model):
         task = cls.objects.get(
             id=task_id
         )
-        task.users.add(user)
+        task.editors.add(user)
 
     @classmethod
     def remove_editor(cls, task_id, user):
         task = cls.objects.get(
             id=task_id
         )
-        task.users.remove(user)
+        task.editors.remove(user)
+
+    @classmethod
+    def select_tasks_by_editor(cls, user):
+        return TaskModel.objects.filter(editors__id__exact=user.id)
+
+    @classmethod
+    def select_tasks_by_author(cls, user):
+        return TaskModel.objects.filter(author__id__exact=user.id)
+
+    def __str__(self):
+        return self.title
 
 
 
