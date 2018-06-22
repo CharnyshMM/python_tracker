@@ -6,8 +6,7 @@ import re
 
 class MyMultiChoiceField(forms.CharField):
     def to_python(self, value):
-        usernames = re.split(r'\W+',value)
-
+        usernames = re.findall(r'(\w+)\W*',value)
         users = []
         try:
             for u in usernames:
@@ -18,7 +17,7 @@ class MyMultiChoiceField(forms.CharField):
         return users
 
 class TaskForm(forms.ModelForm):
-    editors=forms.CharField(required=False)
+    editors = MyMultiChoiceField(required=False)
     class Meta:
         model = TaskModel
         fields = ('title','start_time','end_time')

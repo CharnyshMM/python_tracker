@@ -7,9 +7,25 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 
+
+from functools import wraps
 from .forms import TaskForm
 
+
+def access_allowed(function):
+    @wraps(function)
+    def wrapper(request, task_id, *args, **kwargs):
+        user = request.user
+        if task_id == '0':
+            return function(request, task_id, *args, **kwargs)
+        task = TaskModel.objects.get(id=int(task_id))
+        if (task.author.id != user.id) and not (user in task.editors.all()):
+            return HttpResponse("You can't go there! {}".format(task_id))
+
+        return function(request, task_id, *args, **kwargs)
+    return wrapper
 
 @login_required
 def index(request):
@@ -21,6 +37,7 @@ def index(request):
 
 
 @login_required
+@access_allowed
 def detail(request, task_id):
     task = get_object_or_404(TaskModel, pk=task_id)
     editor_names = []
@@ -32,20 +49,20 @@ def detail(request, task_id):
 
 
 @login_required
+@access_allowed
 def new_task(request, task_id):
     if request.method == "POST":
         form = TaskForm(request.POST)
         if form.is_valid():
             task = form.save(commit=False)
             task.author = request.user
-            if len(TaskModel.objects.filter(id=task_id))>0:
+            if task_id != '0':
                 task.parent = TaskModel.objects.get(id=task_id)
             task.save()
             users = form.cleaned_data.get('editors')
+            print(users)
             for u in users:
                 TaskModel.add_editor(task.id, u)
-
-
             return redirect('index')
     else:
         form = TaskForm()
@@ -53,6 +70,7 @@ def new_task(request, task_id):
 
 
 @login_required
+@access_allowed
 def edit_task(request, task_id):
     if request.method == "POST":
         form = TaskForm(request.POST)
@@ -69,6 +87,7 @@ def edit_task(request, task_id):
 
 
 @login_required
+@access_allowed
 def delete_task(request, task_id):
     task = get_object_or_404(TaskModel, pk=task_id)
     task.delete()
