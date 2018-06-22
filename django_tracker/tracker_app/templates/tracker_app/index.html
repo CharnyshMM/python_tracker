@@ -3,25 +3,101 @@
 {% block title %}Tasks list{% endblock %}
 
 {% block content%}
-    <p>Your tasks:</p>
-    <a href="{% url 'new_task' 0 %}">Create new</a>
     {% if authored_tasks %}
-        <ul>
+        <table class="table">
+          <thead class="thead-dark">
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Title</th>
+              <th scope="col">Starts</th>
+              <th scope="col">Ends</th>
+              <th scope="col">Periodic</th>
+                <th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+
             {% for task in authored_tasks %}
-                <li><a href="{% url 'detail_task' task.id %}">{{task.title}}</a></li>
-            {% endfor %}
-        </ul>
+            <tr>
+            <th scope="row">{{forloop.counter}}</th>
+            <td><a href="{% url 'detail_task' task.id %}">{{task.title}}</a></td>
+            <td>{{task.start_time}}</td>
+            <td>{{task.end_time}}</td>
+            <td>None</td>
+            <td>
+             <div class="dropdown show">
+                <button class="btn btn-primary dropdown-toggle" type="button" id="t_{{task.id}}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      Actions
+                </button>
+                <div class="dropdown-menu" aria-labelledby="t_{{task.id}}">
+                    <a class="dropdown-item" href="{% url 'new_plan' task.id %}">Add plan</a>
+                    <a class="dropdown-item" href="{% url 'new_task' task.id %}">Add subtask</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{% url 'edit_task' task.id  %}">Edit</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item -danger" href="{% url 'delete_task' task.id %}">Delete</a>
+                </div>
+             </div>
+            </td>
+            </tr>
+{% endfor %}
+
+      </tbody>
+    </table>
     {% else %}
-        <p>"No tasks in storage</p>
+        <div class="alert alert-secondary" role="alert">
+            No tasks here... You can <a href="{% url 'new_task' 0 %}">Create a task</a>
+        </div>
     {% endif %}
 
+    <label for="shared_tasks_check">
+        <div class="alert alert-primary" id="shared_label">Show shared tasks</div>
+    </label>
+     <input type="checkbox" id="shared_tasks_check" display="none" onclick="showView()">
+    <div id="shared_tasks_block">
     {% if edited_tasks %}
-        <p>Tasks you can edit:</p>
-        <ul>
-            {% for task in edited_tasks %}
-                <li><a href="{% url 'detail_task' task.id %}">{{task.title}}</a></li>
-            {% endfor %}
-        </ul>
+    <table class="table">
+      <thead class="thead-dark">
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Title</th>
+          <th scope="col">Starts</th>
+          <th scope="col">Ends</th>
+          <th scope="col">Periodic</th>
+        </tr>
+      </thead>
+      <tbody>
+
+         {% for task in edited_tasks %}
+           <tr>
+             <th scope="row">{{forloop.counter}}</th>
+             <td><a href="{% url 'detail_task' task.id %}">{{task.title}}</a></td>
+             <td>{{task.start_time}}</td>
+             <td>{{task.end_time}}</td>
+             <td>None</td>
+
+           </tr>
+         {% endfor %}
+
+      </tbody>
+    </table>
     {%endif%}
+    </div>
+
+<script>
+function showView() {
+    var s_check_bx = document.getElementById("shared_tasks_check");
+    var s_block = document.getElementById("shared_tasks_block");
+    var s_label = document.getElementById("shared_label");
+    if (s_check_bx.checked == true){
+        s_label.innerHTML = "Hide shared tasks";
+        s_block.style.display = "block";
+    } else {
+        s_label.innerHTML = "Show shared tasks";
+        s_block.style.display = "none";
+    }
+}
+</script>
+
 
 {% endblock %}
