@@ -4,7 +4,8 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 import re
 
-class MyMultiChoiceField(forms.CharField):
+
+class CommaSepMultiChoiceField(forms.CharField):
     def to_python(self, value):
         usernames = re.findall(r'(\w+)\W*',value)
         users = []
@@ -16,8 +17,9 @@ class MyMultiChoiceField(forms.CharField):
             raise ValidationError('username incorrect')
         return users
 
+
 class TaskForm(forms.ModelForm):
-    editors = MyMultiChoiceField(required=False)
+    editors = CommaSepMultiChoiceField(required=False)
     class Meta:
         model = TaskModel
         fields = ('title','start_time','end_time')
