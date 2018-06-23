@@ -4,10 +4,14 @@
 
 {% block content%}
     <div class="search_bar">
+        <a href="{% url 'new_task' 0 %}">
+            <button class="btn btn-primary">Create Task</button>
+        </a>
     <form method="post">
 
 
         {% csrf_token %}
+
         {{ form.non_field_errors }}
 
         {{ form.source.errors }}
@@ -15,12 +19,20 @@
         <table>
             <tr>
                 <td>
+                    {{ form.include_shared_tasks.label}}
+                    {{ form.include_shared_tasks}}
+                </td>
+                <td>
                     {{ form.show_mode.errors }}
                     {{ form.show_mode }}
                 </td>
                 <td>
-                    {{ form.search_text.errors }}
-                    {{ form.search_text }}
+                    {{ form.text_field.errors }}
+                    {{ form.text_field }}
+                </td>
+                <td>
+                    {{ form.selected_filter.errors }}
+                    {{ form.selected_filter }}
                 </td>
                 <td>
                     <button type="submit">Filter</button>
@@ -30,31 +42,47 @@
     </form>
     </div>
 
-    {% if authored_tasks %}
+    {% if tasks_list %}
         <table class="table">
           <thead class="thead-dark">
             <tr>
               <th scope="col">#</th>
               <th scope="col">Title</th>
+              <th scope="col">Priority</th>
               <th scope="col">Starts</th>
               <th scope="col">Ends</th>
-              <th scope="col">Periodic</th>
-                <th scope="col"></th>
+              <th scope="col"></th>
             </tr>
           </thead>
           <tbody>
 
-            {% for task in authored_tasks %}
+            {% for task in tasks_list %}
             <tr>
             <th scope="row">{{forloop.counter}}</th>
-            <td><a href="{% url 'detail_task' task.id %}">{{task.title}}</a></td>
+            <td><a href="{% url 'detail_task' task.id %}">
+                {% if task.author.id == user.id %}
+                    {{task.title}}
+                {% else %}
+                    {{task.title}} (shared)
+                {% endif %}
+                </a>
+            </td>
+            <td>
+                {%if task.priority == 1%}
+                    <div class="text-warning">HIGH</div>
+                {%elif task.priority == 2%}
+                    <div class="text-info">MEDIUM</div>
+                {% elif task.priority == 3 %}
+                    <div class="text-muted">LOW</div>
+                {%endif%}
+
+            </td>
             <td>{{task.start_time}}</td>
             <td>{{task.end_time}}</td>
-            <td>None</td>
             <td>
              <div class="dropdown show">
                 <button class="btn btn-primary dropdown-toggle" type="button" id="t_{{task.id}}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      Actions
+                 Actions
                 </button>
                 <div class="dropdown-menu" aria-labelledby="t_{{task.id}}">
                     <a class="dropdown-item" href="{% url 'new_plan' task.id %}">Add plan</a>
@@ -77,39 +105,8 @@
         </div>
     {% endif %}
 
-    <label for="shared_tasks_check">
-        <div class="alert alert-primary" id="shared_label">Show shared tasks</div>
-    </label>
-     <input type="checkbox" id="shared_tasks_check" display="none" onclick="showView()">
-    <div id="shared_tasks_block">
-    {% if edited_tasks %}
-    <table class="table">
-      <thead class="thead-dark">
-        <tr>
-          <th scope="col">#</th>
-          <th scope="col">Title</th>
-          <th scope="col">Starts</th>
-          <th scope="col">Ends</th>
-          <th scope="col">Periodic</th>
-        </tr>
-      </thead>
-      <tbody>
 
-         {% for task in edited_tasks %}
-           <tr>
-             <th scope="row">{{forloop.counter}}</th>
-             <td><a href="{% url 'detail_task' task.id %}">{{task.title}}</a></td>
-             <td>{{task.start_time}}</td>
-             <td>{{task.end_time}}</td>
-             <td>None</td>
 
-           </tr>
-         {% endfor %}
-
-      </tbody>
-    </table>
-    {%endif%}
-    </div>
 
 <script>
 function showView() {

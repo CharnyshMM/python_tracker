@@ -1,9 +1,27 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models import Q
+
 from lib.entities.plan import Period
 
 import datetime as dt
 
+
+class Priority:
+    LOW = 3
+    MEDIUM = 2
+    HIGH = 1
+    PRIORITY_CHOICES = (
+        (LOW,'low'),
+        (MEDIUM, 'medium'),
+        (HIGH,'high'),
+    )
+
+class TagModel(models.Model):
+    tag = models.CharField(max_length=100, null=False)
+
+    def __str__(self):
+        return self.tag
 
 class TaskModel(models.Model):
     title = models.CharField(max_length=200)
@@ -12,7 +30,8 @@ class TaskModel(models.Model):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
     parent = models.ForeignKey('self', null=True, blank=True)
-
+    priority = models.IntegerField(choices=Priority.PRIORITY_CHOICES, default=Priority.MEDIUM)
+    tags = models.ManyToManyField(TagModel)
 
     def get_parent(self):
         if self.parent:
@@ -20,29 +39,30 @@ class TaskModel(models.Model):
         return None
 
     def get_subtasks(self):
+
         return TaskModel.objects.filter(parent_task__id=self.id)
 
-    @classmethod
-    def add_editor(cls, task_id, user):
-        task = cls.objects.get(
-            id=task_id
-        )
-        task.editors.add(user)
-
-    @classmethod
-    def remove_editor(cls, task_id, user):
-        task = cls.objects.get(
-            id=task_id
-        )
-        task.editors.remove(user)
 
     @classmethod
     def select_tasks_by_editor(cls, user):
-        return TaskModel.objects.filter(editors__id__exact=user.id)
+        query = Q(editors__id__exact=user.id) | Q(author__id__exact=user.id)
+        return TaskModel.objects.filter(query)
 
     @classmethod
     def select_tasks_by_author(cls, user):
         return TaskModel.objects.filter(author__id__exact=user.id)
+
+    @classmethod
+    def select_tasks_by_tagslist(cls, query_set, tagslist):
+        task_list = []
+        tagslist = [TagModel.objects.get(tag=x) for x in tagslist]
+        for task in query_set:
+            all_tags = []
+            for tag in tagslist:
+                all_tags.append(tag in task.tags.all())
+            if all(all_tags):
+                task_list.append(task)
+        return task_list
 
     def __str__(self):
         return self.title

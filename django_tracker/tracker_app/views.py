@@ -29,15 +29,29 @@ def access_allowed(function):
 
 @login_required
 def index(request):
-    # if request.method == "POST":
-    #     form = TaskListViewForm(request.POST)
-    #
-    # else:
-        authored_tasks = TaskModel.select_tasks_by_author(request.user)
-        edited_tasks = list(set(TaskModel.select_tasks_by_editor(request.user)) - set(authored_tasks))
-        template = loader.get_template('tracker_app/index.html')
-        context = {'authored_tasks': authored_tasks,'edited_tasks': edited_tasks, 'form': TaskListViewForm()}
-        return HttpResponse(template.render(context, request))
+    tasks_list = TaskModel.select_tasks_by_author(request.user)
+
+    if request.method == "POST":
+        form = TaskListViewForm(request.POST)
+    else:
+        form = TaskListViewForm()
+
+    if form.is_valid():
+        if form.cleaned_data['include_shared_tasks']:
+            tasks_list = TaskModel.select_tasks_by_editor(request.user)
+        tasks_list = tasks_list.order_by(form.cleaned_data['show_mode'])
+
+        if form.cleaned_data['selected_filter'] == 'tags':
+            tasks_list = TaskModel.select_tasks_by_tagslist(tasks_list,form.cleaned_data['text_field'])
+
+        else:
+            title = " ".join(form.cleaned_data['text_field'])
+            tasks_list = tasks_list.filter(title__icontains=title)
+
+
+    template = loader.get_template('tracker_app/index.html')
+    context = {'tasks_list': tasks_list, 'form': form}
+    return HttpResponse(template.render(context, request))
 
 
 @login_required
@@ -66,7 +80,8 @@ def new_task(request, task_id):
             users = form.cleaned_data.get('editors')
             print(users)
             for u in users:
-                TaskModel.add_editor(task.id, u)
+                task.editors.add(u)
+            task.save()
             return redirect('index')
     else:
         form = TaskForm()

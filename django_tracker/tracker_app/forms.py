@@ -1,13 +1,17 @@
 from django import forms
-from .models import TaskModel, PlanModel
+from .models import TaskModel, PlanModel, Priority
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 import re
 
 
-class CommaSepMultiChoiceField(forms.CharField):
+class CommaSepMultiWordsCharField(forms.CharField):
     def to_python(self, value):
-        usernames = re.findall(r'(\w+)\W*',value)
+        return re.findall(r'(\w+)\W*',value)
+
+class CommaSepMultiUserField(CommaSepMultiWordsCharField):
+    def to_python(self, value):
+        usernames = super().to_python(value)
         users = []
         try:
             for u in usernames:
@@ -18,14 +22,17 @@ class CommaSepMultiChoiceField(forms.CharField):
         return users
 
 
+
+
 class TaskForm(forms.ModelForm):
-    editors = CommaSepMultiChoiceField(required=False)
+    editors = CommaSepMultiUserField(required=False)
     class Meta:
         model = TaskModel
-        fields = ('title','start_time','end_time')
+        fields = ('title','start_time','end_time','priority','tags')
         widgets = {
             'start_time': forms.DateTimeInput(),
             'end_time': forms.DateTimeInput(),
+            'priority': forms.RadioSelect(choices=Priority.PRIORITY_CHOICES)
         }
 
 
@@ -59,7 +66,11 @@ class PlanForm(forms.Form):
                          timedelta_period=self.get_period(),
                          end_time=self.cleaned_data['end_time'])
 
+
 class TaskListViewForm(forms.Form):
-    show_modes = ['priority','start_date','end_date','notifications']
-    show_mode = forms.ChoiceField(choices=[(k, k) for k in show_modes], required=False)
-    search_text = forms.CharField(max_length=100,required=False)
+    show_modes = ['priority', 'start_time', 'end_time', 'notifications']
+    filters = ['tags', 'title']
+    include_shared_tasks = forms.BooleanField(initial=True, label='Include shared tasks',required=False)
+    show_mode = forms.ChoiceField(choices=[(m, m) for m in show_modes], required=False)
+    selected_filter = forms.ChoiceField(choices=[(f, f) for f in filters])
+    text_field = CommaSepMultiWordsCharField(max_length=100, required=False)
