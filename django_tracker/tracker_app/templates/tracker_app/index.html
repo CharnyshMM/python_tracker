@@ -3,6 +3,33 @@
 {% block title %}Tasks list{% endblock %}
 
 {% block content%}
+    <div class="search_bar">
+    <form method="post">
+
+
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        {{ form.source.errors }}
+        {{ form.source }}
+        <table>
+            <tr>
+                <td>
+                    {{ form.show_mode.errors }}
+                    {{ form.show_mode }}
+                </td>
+                <td>
+                    {{ form.search_text.errors }}
+                    {{ form.search_text }}
+                </td>
+                <td>
+                    <button type="submit">Filter</button>
+                </td>
+            </tr>
+        </table>
+    </form>
+    </div>
+
     {% if authored_tasks %}
         <table class="table">
           <thead class="thead-dark">

@@ -8,7 +8,7 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 
-from .forms import TaskForm, PlanForm
+from .forms import TaskForm, PlanForm, TaskListViewForm
 from .models import TaskModel, PlanModel
 from functools import wraps
 
@@ -29,11 +29,15 @@ def access_allowed(function):
 
 @login_required
 def index(request):
-    authored_tasks = TaskModel.select_tasks_by_author(request.user)
-    edited_tasks = list(set(TaskModel.select_tasks_by_editor(request.user)) - set(authored_tasks))
-    template = loader.get_template('tracker_app/index.html')
-    context = {'authored_tasks': authored_tasks,'edited_tasks': edited_tasks}
-    return HttpResponse(template.render(context, request))
+    # if request.method == "POST":
+    #     form = TaskListViewForm(request.POST)
+    #
+    # else:
+        authored_tasks = TaskModel.select_tasks_by_author(request.user)
+        edited_tasks = list(set(TaskModel.select_tasks_by_editor(request.user)) - set(authored_tasks))
+        template = loader.get_template('tracker_app/index.html')
+        context = {'authored_tasks': authored_tasks,'edited_tasks': edited_tasks, 'form': TaskListViewForm()}
+        return HttpResponse(template.render(context, request))
 
 
 @login_required

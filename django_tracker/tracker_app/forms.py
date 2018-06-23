@@ -59,3 +59,7 @@ class PlanForm(forms.Form):
                          timedelta_period=self.get_period(),
                          end_time=self.cleaned_data['end_time'])
 
+class TaskListViewForm(forms.Form):
+    show_modes = ['priority','start_date','end_date','notifications']
+    show_mode = forms.ChoiceField(choices=[(k, k) for k in show_modes], required=False)
+    search_text = forms.CharField(max_length=100,required=False)

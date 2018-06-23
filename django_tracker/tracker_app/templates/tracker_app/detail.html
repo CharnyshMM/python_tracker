@@ -1,8 +1,9 @@
 {% extends 'tracker_app/base.html' %}
 
 {% block title %}{{task.title}}{% endblock %}
+
 {% block content %}
-    <h1>{{task.title}} task</h1>
+    <h1>{{task.title}}</h1>
     <a href="{% url 'edit_task' task.id  %}">
         <button type="button" class="btn btn-warning btn-sm">Edit</button>
     </a>
@@ -10,10 +11,13 @@
         <button type="button" class="btn btn-danger btn-sm">Delete</button>
     </a>
     <a href="{% url 'new_task' task.id %}">
-        <button type="button" class="btn btn-info btn-sm">Create subtask</button>
+        <button type="button" class="btn btn-info btn-sm">Create Subtask</button>
+    </a>
+    <a href="{% url 'new_plan' task.id %}">
+        <button type="button" class="btn btn-info btn-sm">New Plan</button>
     </a>
     <hr/>
-    <ul>
+    <ul class="list-group">
         <li><i>Author</i>: {{task.author}}</li>
         <li><i>Starts</i>: {{task.start_time}}</li>
         <li><i>Ends</i>: {{task.end_time}}</li>
@@ -25,7 +29,7 @@
     {% if subtasks %}
         <h2>Subtasks:</h2>
         <ol>
-        {% for subtask in subtasks%}
+        {% for subtask in subtasks %}
 
             <li><a href="{% url 'detail_task' subtask.id %}"> {{subtask.title}} </a></li>
 
