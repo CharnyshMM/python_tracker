@@ -1,0 +1,43 @@
+{% extends 'tracker_app/base.html' %}
+
+{% block title %}Periodic Plans{% endblock %}
+
+{% block content %}
+
+<table class="table">
+    <thead class="thead-light">
+            <tr>
+                <th>#</th>
+                <th>Template Task</th>
+                <th>Last update:</th>
+                <th>Period</th>
+                <th>Plan ends:</th>
+                <th></th>
+            </tr>
+    </thead>
+    <tbody>
+        {% for plan in plans_list %}
+        <tr>
+            <td>{{forloop.counter}}</td>
+            <td><a href="{% url 'detail_task' plan.task_template.id %}">{{plan.task_template.title}}</a></td>
+            <td>{{plan.last_update_time}}</td>
+            <td>{{plan.period}}</td>
+            <td>
+                {% if plan.end_time %}
+                    {{plan.end_time}}
+                {% else %}
+                    Never
+                {% endif %}
+            </td>
+            <td>
+                <a href="{% url 'delete_plan' plan.id %}">
+                    <button type="button" class="btn btn-danger btn-sm">Delete</button>
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+{% endblock %}

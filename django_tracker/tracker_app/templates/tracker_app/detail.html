@@ -3,29 +3,52 @@
 {% block title %}{{task.title}}{% endblock %}
 
 {% block content %}
-    <h1>{{task.title}}</h1>
-    <a href="{% url 'edit_task' task.id  %}">
-        <button type="button" class="btn btn-warning btn-sm">Edit</button>
-    </a>
-    <a href="{% url 'delete_task' task.id %}">
-        <button type="button" class="btn btn-danger btn-sm">Delete</button>
-    </a>
-    <a href="{% url 'new_task' task.id %}">
-        <button type="button" class="btn btn-info btn-sm">Create Subtask</button>
-    </a>
-    <a href="{% url 'new_plan' task.id %}">
-        <button type="button" class="btn btn-info btn-sm">New Plan</button>
-    </a>
+    <div>
+        <h1>{{task.title}}</h1>
+        <a href="{% url 'edit_task' task.id  %}">
+            <button type="button" class="btn btn-warning btn-sm">Edit</button>
+        </a>
+        <a href="{% url 'delete_task' task.id %}">
+            <button type="button" class="btn btn-danger btn-sm">Delete</button>
+        </a>
+        <a href="{% url 'new_task' task.id %}">
+            <button type="button" class="btn btn-info btn-sm">Create Subtask</button>
+        </a>
+        <a href="{% url 'new_plan' task.id %}">
+            <button type="button" class="btn btn-info btn-sm">New Plan</button>
+        </a>
+    </div>
     <hr/>
-    <ul class="list-group">
-        <li><i>Author</i>: {{task.author}}</li>
-        <li><i>Starts</i>: {{task.start_time}}</li>
-        <li><i>Ends</i>: {{task.end_time}}</li>
-        {% if task.get_parent  %}
-            <li><i>Parent</i>: <a href="{% url 'detail_task' task.get_parent.id %}">{{task.get_parent.title}}</a></li>
-        {% endif %}
-        <li><i>Editors</i>: {{editors}}</li>
-    </ul>
+    <table>
+        <tr>
+            <td>
+                <ul class="list-group">
+                    <li class="list-group-item"><i>Author</i>: {{task.author}}</li>
+                    <li class="list-group-item"><i>Starts</i>: {{task.start_time}}</li>
+                    <li class="list-group-item"><i>Ends</i>: {{task.end_time}}</li>
+                    {% if task.get_parent  %}
+                        <li class="list-group-item"><i>Parent</i>: <a href="{% url 'detail_task' task.get_parent.id %}">{{task.get_parent.title}}</a></li>
+                    {% endif %}
+                    <li class="list-group-item"><i>Editors</i>: {{editors}}</li>
+                    {% for p in created_by_plan %}
+                     <li class="list-group-item"><i>Created by plan</i>: {{p}}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+            <td>
+                {% for p in template_for_plan %}
+                 <ul class="list-group">
+                     <li class="list-group-item active">Periodic Plan</li>
+                     <li class="list-group-item"><i>Period</i>: {{p.period}}</li>
+                     <li class="list-group-item"><i>Ends</i>: {{p.end_time}}</li>
+                     <li class="list-group-item"><i>Last update</i>: {{p.last_update_time}}</li>
+
+                </ul>
+                {% endfor %}
+            </td>
+        </tr>
+    </table>
+
     {% if subtasks %}
         <h2>Subtasks:</h2>
         <ol>
