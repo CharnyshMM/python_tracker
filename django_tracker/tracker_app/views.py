@@ -16,18 +16,20 @@ from django.utils import timezone
 import datetime as dt
 
 
-def access_allowed(function):
-    @wraps(function)
-    def wrapper(request, task_id, *args, **kwargs):
-        user = request.user
-        if task_id == '0':
-            return function(request, task_id, *args, **kwargs)
-        task = TaskModel.objects.get(id=int(task_id))
-        if (task.author.id != user.id) and not (user in task.editors.all()):
-            return HttpResponse("You can't go there! {}".format(task_id))
+def check_permissions(model):
+    def real_decorator(function):
+        @wraps(function)
+        def wrapper(request, object_id, *args, **kwargs):
+            user = request.user
+            if object_id == '0':
+                return function(request, object_id, *args, **kwargs)
+            obj = get_object_or_404(klass=model, pk=object_id)
+            if not obj.user_can_access(request.user):
+                return HttpResponse("You can't go there! {}".format(object_id))
 
-        return function(request, task_id, *args, **kwargs)
-    return wrapper
+            return function(request, object_id, *args, **kwargs)
+        return wrapper
+    return real_decorator
 
 @login_required
 def index(request):
@@ -58,6 +60,9 @@ def index(request):
 
 @login_required
 def actuals(request):
+    for plan in PlanModel.objects.all():
+        plan.update()
+
     tasks_list = TaskModel.select_tasks_by_editor(request.user)
     report_time = timezone.now()
     time_range = (report_time - dt.timedelta(minutes=3), report_time + dt.timedelta(minutes=3))
@@ -73,27 +78,36 @@ def actuals(request):
                   )
 
 @login_required
-@access_allowed
-def detail(request, task_id):
-    task = get_object_or_404(TaskModel, pk=task_id)
+@check_permissions(model=TaskModel)
+def detail(request, object_id):
+    task = get_object_or_404(TaskModel, pk=object_id)
     editor_names = []
     for editor in task.editors.all():
         editor_names.append(editor.username)
-
-    subtasks = TaskModel.objects.filter(parent=task_id)
-    return render(request, 'tracker_app/detail.html', {'task': task, 'subtasks': subtasks, 'editors': editor_names})
+    template_for_plan = PlanModel.objects.filter(task_template=task)
+    created_by_plan = PlanModel.objects.filter(created_tasks=task)
+    subtasks = TaskModel.objects.filter(parent=object_id)
+    return render(request,
+                  'tracker_app/detail.html',
+                  {'task': task,
+                   'subtasks': subtasks,
+                   'editors': editor_names,
+                   'template_for_plan': template_for_plan,
+                   'created_by_plan':created_by_plan,
+                   }
+                  )
 
 
 @login_required
-@access_allowed
-def new_task(request, task_id):
+@check_permissions(TaskModel)
+def new_task(request, object_id):
     if request.method == "POST":
         form = TaskForm(request.POST)
         if form.is_valid():
             task = form.save(commit=False)
             task.author = request.user
-            if task_id != '0':
-                task.parent = TaskModel.objects.get(id=task_id)
+            if object_id != '0':
+                task.parent = TaskModel.objects.get(id=object_id)
             task.save()
             users = form.cleaned_data.get('editors')
             print(users)
@@ -107,24 +121,25 @@ def new_task(request, task_id):
 
 
 @login_required
-@access_allowed
-def edit_task(request, task_id):
+@check_permissions(TaskModel)
+def edit_task(request, object_id):
     if request.method == "POST":
         form = TaskForm(request.POST)
         if form.is_valid():
             task = form.save(commit=False)
-            TaskModel.objects.filter(pk=task_id).update(title=task.title,
-                                                        start_time=task.start_time,
-                                                        end_time=task.end_time)
+            TaskModel.objects.filter(pk=object_id).update(title=task.title,
+                                                          start_time=task.start_time,
+                                                          end_time=task.end_time)
             return redirect('index')
     else:
-        task = get_object_or_404(TaskModel, pk=task_id)
+        task = get_object_or_404(TaskModel, pk=object_id)
+
         form = TaskForm(instance=task)
     return render(request, 'tracker_app/task_form.html', {'form': form})
 
 
 @login_required
-@access_allowed
+@check_permissions(TaskModel)
 def delete_task(request, task_id):
     task = get_object_or_404(TaskModel, pk=task_id)
     task.delete()
@@ -132,13 +147,14 @@ def delete_task(request, task_id):
 
 
 @login_required
-@access_allowed
-def add_plan(request, task_id):
+@check_permissions(TaskModel)
+def add_plan(request, object_id):
     if request.method == "POST":
         form = PlanForm(request.POST)
         if form.is_valid():
-            task = TaskModel.objects.get(id=task_id)
+            task = get_object_or_404(TaskModel, pk=object_id)
             plan = form.create_plan(task)
+            plan.author = request.user
             plan.save()
             plan.update()
             return redirect('index')
@@ -146,6 +162,17 @@ def add_plan(request, task_id):
         form = PlanForm()
     return render(request, 'tracker_app/plan_form.html', {'form': form})
 
+
+@login_required
+def all_plans(request):
+    plans_list = PlanModel.objects.filter(author=request.user)
+    return render(request, 'tracker_app/plans.html', {'plans_list': plans_list})
+
+@login_required
+def delete_plan(request, object_id):
+    plan = get_object_or_404(PlanModel,pk=object_id)
+    plan.delete()
+    return HttpResponseRedirect('all_plans')
 
 #===========================================
 #   AUTHENTICATION
