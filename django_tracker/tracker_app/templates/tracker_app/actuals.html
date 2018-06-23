@@ -1,0 +1,107 @@
+{% extends 'tracker_app/base.html' %}
+
+{% block title %} Actuals {% endblock %}
+
+{% block content%}
+
+    <table class="table">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">Starting tasks</th>
+                <th scope="col">Continuing tasks</th>
+                <th scope="col">Ending tasks</th>
+            </tr>
+        </thead>
+        <tbody>
+        <tr scope="row">
+
+            <td scope="col">
+
+                <table class="table">
+                    <tbody>
+                    {% for task in starting_tasks %}
+                        <tr  scope="row">
+                            <td scope="col">{{forloop.counter}}</td>
+                            <td scope="col"><a href="{% url 'detail_task' task.id %}">
+                                {% if task.author.id == user.id %}
+                                    {{task.title}}
+                                {% else %}
+                                    {{task.title}} (shared)
+                                {% endif %}
+                            </a></td>
+                            <td scope="col">
+                                {%if task.priority == 1%}
+                                    <div class="text-warning">HIGH</div>
+                                {%elif task.priority == 2%}
+                                    <div class="text-info">MEDIUM</div>
+                                {% elif task.priority == 3 %}
+                                    <div class="text-muted">LOW</div>
+                                {%endif%}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </td>
+            <td scope="col">
+
+                <table class="table">
+                    <tbody>
+                    {% for task in continuing_tasks %}
+                        <tr scope="row">
+                            <td scope="col">{{forloop.counter}}</td>
+                            <td scope="col"><a href="{% url 'detail_task' task.id %}">
+                                {% if task.author.id == user.id %}
+                                    {{task.title}}
+                                {% else %}
+                                    {{task.title}} (shared)
+                                {% endif %}
+                            </a></td>
+                            <td scope="col">
+                                {%if task.priority == 1%}
+                                    <div class="text-warning">HIGH</div>
+                                {%elif task.priority == 2%}
+                                    <div class="text-info">MEDIUM</div>
+                                {% elif task.priority == 3 %}
+                                    <div class="text-muted">LOW</div>
+                                {%endif%}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </td>
+            <td scope="col">
+
+
+                <table class="table">
+                    <tbody>
+                    {% for task in ending_tasks %}
+                        <tr  scope="row">
+                            <td scope="col">{{forloop.counter}}</td>
+                            <td scope="col"><a href="{% url 'detail_task' task.id %}">
+                                {% if task.author.id == user.id %}
+                                    {{task.title}}
+                                {% else %}
+                                    {{task.title}} (shared)
+                                {% endif %}
+                            </a></td>
+                            <td scope="col">
+                                {%if task.priority == 1%}
+                                    <div class="text-warning">HIGH</div>
+                                {%elif task.priority == 2%}
+                                    <div class="text-info">MEDIUM</div>
+                                {% elif task.priority == 3 %}
+                                    <div class="text-muted">LOW</div>
+                                {%endif%}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+{% endblock %}

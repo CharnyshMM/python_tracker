@@ -7,6 +7,9 @@
         <a href="{% url 'new_task' 0 %}">
             <button class="btn btn-primary">Create Task</button>
         </a>
+        <a href="{% url 'actuals' %}">
+            <button class="btn btn-primary">Actual tasks</button>
+        </a>
     <form method="post">
 
 
@@ -44,7 +47,7 @@
 
     {% if tasks_list %}
         <table class="table">
-          <thead class="thead-dark">
+          <thead class="thead-light">
             <tr>
               <th scope="col">#</th>
               <th scope="col">Title</th>

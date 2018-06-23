@@ -1,4 +1,5 @@
 # Create your views here.
+from django.db.models import Q
 from django.http import HttpResponse
 from django.template import loader
 
@@ -11,7 +12,8 @@ from django.contrib.auth.decorators import login_required
 from .forms import TaskForm, PlanForm, TaskListViewForm
 from .models import TaskModel, PlanModel
 from functools import wraps
-
+from django.utils import timezone
+import datetime as dt
 
 
 def access_allowed(function):
@@ -29,7 +31,7 @@ def access_allowed(function):
 
 @login_required
 def index(request):
-    tasks_list = TaskModel.select_tasks_by_author(request.user)
+    tasks_list = TaskModel.select_tasks_by_editor(request.user)
 
     if request.method == "POST":
         form = TaskListViewForm(request.POST)
@@ -53,6 +55,22 @@ def index(request):
     context = {'tasks_list': tasks_list, 'form': form}
     return HttpResponse(template.render(context, request))
 
+
+@login_required
+def actuals(request):
+    tasks_list = TaskModel.select_tasks_by_editor(request.user)
+    report_time = timezone.now()
+    time_range = (report_time - dt.timedelta(minutes=3), report_time + dt.timedelta(minutes=3))
+    starting_tasks = tasks_list.filter(start_time__range=time_range)
+    ending_tasks = tasks_list.filter(end_time__range=time_range)
+    continuing_tasks = tasks_list.filter(start_time__lt=time_range[0], end_time__gt=time_range[1])
+    return render(request,
+                  'tracker_app/actuals.html',
+                    {'starting_tasks': starting_tasks,
+                     'continuing_tasks': continuing_tasks,
+                     'ending_tasks': ending_tasks,
+                    }
+                  )
 
 @login_required
 @access_allowed

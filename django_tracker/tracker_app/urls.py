@@ -6,7 +6,8 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     # /tracker_app
-    url(r'^$', views.index, name='index'),
+    url(r'^$', view=views.index, name='index'),
+    url(r'^actuals/$',view=views.actuals, name='actuals'),
     url(r'^accounts/login/$', auth_views.login, {'template_name': 'tracker_app/login.html'}, name='login'),
     url(r'^accounts/logout/$', auth_views.logout,{'template_name': 'tracker_app/logout.html'}, name='logout'),
     url(r'^accounts/signup/$', views.signup, name='signup'),

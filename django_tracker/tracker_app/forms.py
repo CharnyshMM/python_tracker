@@ -22,16 +22,12 @@ class CommaSepMultiUserField(CommaSepMultiWordsCharField):
         return users
 
 
-
-
 class TaskForm(forms.ModelForm):
     editors = CommaSepMultiUserField(required=False)
     class Meta:
         model = TaskModel
         fields = ('title','start_time','end_time','priority','tags')
         widgets = {
-            'start_time': forms.DateTimeInput(),
-            'end_time': forms.DateTimeInput(),
             'priority': forms.RadioSelect(choices=Priority.PRIORITY_CHOICES)
         }
 
