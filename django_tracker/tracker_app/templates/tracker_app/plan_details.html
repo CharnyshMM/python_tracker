@@ -1,0 +1,46 @@
+{% extends 'tracker_app/base.html' %}
+
+{% block title %}Plan - {{plan.task_template.title}}{% endblock %}
+
+{% block content %}
+    <h1>Plan - {{plan.task_template.title}}</h1>
+    <a href="{% url 'delete_plan' plan.id %}">
+                    <button type="button" class="btn btn-danger btn-sm">Delete</button>
+    </a>
+    <table class="table">
+        <tbody>
+            <tr>
+                <td>
+                    <ul class="list-group">
+                        <li class="list-group-item active">Details</li>
+                        <li class="list-group-item"><i>Task Title</i>: {{plan.task_template.title}}</li>
+                        <li class="list-group-item"><i>Task Priority</i>{{plan.task_template.priority}}</li>
+                        <li class="list-group-item"><i>Period</i>: {{plan.period}}</li>
+                        <li class="list-group-item"><i>Last update</i>: {{plan.last_update_time}}</li>
+                        <li class="list-group-item"><i>Ends</i>: {{plan.end_time}}</li>
+                    </ul>
+                </td>
+                <td>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Starts</th>
+                                <th>Ends</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for task in plan.created_tasks.all %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td>{{task.start_time}}</td>
+                            <td>{{task.end_time}}</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+{% endblock %}
