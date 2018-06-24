@@ -12,6 +12,8 @@
     <link rel="stylesheet" type="text/css" href="{% static 'tracker_app/base_style.css' %}" />
 
     <title>{% block title%}{% endblock %}</title>
+
+    <style>{% block style %}{% endblock %}</style>
 </head>
 <body>
 <div class="p-3 mb-2 bg-white text-dark">
@@ -19,7 +21,7 @@
         <table id="header_table">
             <tr>
             <td>
-                <h3 id="py_tracker_header">Py Tracker Web Application</h3>
+                <h3 id="py_tracker_header">Py_Tracker Web Application</h3>
             </td>
             <td>
                 <div id="logout_div">
@@ -35,8 +37,10 @@
         </table>
     </div>
 </div>
+
+
     {% block content %}
     {% endblock %}
-</div>
+
 </body>
 </html>
