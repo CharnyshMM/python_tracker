@@ -19,6 +19,7 @@ urlpatterns = [
     url(r'^tasks/(?P<object_id>\d+)/edit/$', view=views.edit_task, name='edit_task'),
     url(r'^tasks/(?P<object_id>\d+)/delete/$', view=views.delete_task, name='delete_task'),
     url(r'^tasks/(?P<object_id>\d+)/new_plan/$',view=views.add_plan, name='new_plan'),
+    url(r'^plans/(?P<object_id>\d+)/$', view=views.plan_details, name='plan_details'),
     url(r'^plans/(?P<object_id>\d+)/delete/$',view=views.delete_plan, name='delete_plan'),
     # /tracker_app/plans
     url(r'^plans/', view=views.all_plans, name='all_plans'),

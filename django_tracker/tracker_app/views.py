@@ -174,6 +174,14 @@ def all_plans(request):
 
 
 @login_required
+@check_permissions(PlanModel)
+def plan_details(request, object_id):
+    plan = get_object_or_404(PlanModel,pk=object_id)
+    return render(request, 'tracker_app/plan_details.html', {'plan': plan})
+
+
+@login_required
+@check_permissions(PlanModel)
 def delete_plan(request, object_id):
     plan = get_object_or_404(PlanModel,pk=object_id)
     plan.delete()

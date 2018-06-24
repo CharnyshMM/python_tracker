@@ -19,7 +19,7 @@
         {% for plan in plans_list %}
         <tr>
             <td>{{forloop.counter}}</td>
-            <td><a href="{% url 'detail_task' plan.task_template.id %}">{{plan.task_template.title}}</a></td>
+            <td><a href="{% url 'plan_details' plan.id %}">{{plan.task_template.title}}</a></td>
             <td>{{plan.last_update_time}}</td>
             <td>{{plan.period}}</td>
             <td>
