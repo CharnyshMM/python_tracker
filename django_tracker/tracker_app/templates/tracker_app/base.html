@@ -8,19 +8,35 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'tracker_app/base_style.css' %}" />
+
     <title>{% block title%}{% endblock %}</title>
 </head>
 <body>
-<h3>Py Tracker Web Application</h3>
-{% if user.is_authenticated %}
-          You are {{ user.username }}!
-          <a href="{% url 'logout' %}">Log Out</a>
-{% else %}
-        Hi! Please <a href="{% url 'login' %}">Log In</a> or <a href="{% url 'signup' %}">Sign Up</a>
-{% endif %}
-
-{% block content %}
-{% endblock %}
-
+<div class="p-3 mb-2 bg-white text-dark">
+    <div class="p-3 mb-2 bg-light text-dark">
+        <table id="header_table">
+            <tr>
+            <td>
+                <h3 id="py_tracker_header">Py Tracker Web Application</h3>
+            </td>
+            <td>
+                <div id="logout_div">
+                    {% if user.is_authenticated %}
+                              You are {{ user.username }}!
+                              <a href="{% url 'logout' %}">Log Out</a>
+                    {% else %}
+                            Hi! Please <a href="{% url 'login' %}">Log In</a> or <a href="{% url 'signup' %}">Sign Up</a>
+                    {% endif %}
+                </div>
+            </td>
+            </tr>
+        </table>
+    </div>
+</div>
+    {% block content %}
+    {% endblock %}
+</div>
 </body>
 </html>

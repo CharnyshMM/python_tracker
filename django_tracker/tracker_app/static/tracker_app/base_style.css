@@ -1,0 +1,11 @@
+#header_table {
+    width:100%;
+}
+
+
+#logout_div{
+    max-width:200px;
+    border: solid 2px gray;
+    border-radius: 5px;
+}
+
