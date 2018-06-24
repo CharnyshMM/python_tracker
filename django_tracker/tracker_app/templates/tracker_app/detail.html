@@ -3,20 +3,37 @@
 {% block title %}{{task.title}}{% endblock %}
 
 {% block content %}
-    <div>
+
         <h1>{{task.title}}</h1>
-        <a href="{% url 'edit_task' task.id  %}">
-            <button type="button" class="btn btn-warning btn-sm">Edit</button>
-        </a>
-        <a href="{% url 'delete_task' task.id %}">
-            <button type="button" class="btn btn-danger btn-sm">Delete</button>
-        </a>
         <a href="{% url 'new_task' task.id %}">
             <button type="button" class="btn btn-info btn-sm">Create Subtask</button>
         </a>
-        <a href="{% url 'new_plan' task.id %}">
-            <button type="button" class="btn btn-info btn-sm">New Plan</button>
+        <a href="{% url 'edit_task' task.id  %}">
+            <button type="button" class="btn btn-warning btn-sm">Edit</button>
         </a>
+
+        <a href="{% url 'delete_task' task.id %}">
+            <button type="button" class="btn btn-danger btn-sm">Delete</button>
+        </a>
+
+        <div class="dropdown show">
+                <button class="btn btn-primary dropdown-toggle" type="button" id="plans" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                 Plans
+                </button>
+                 <div class="dropdown-menu" aria-labelledby="plans">
+
+                        {% if template_for_plan %}
+                            <a class="dropdown-item" href="{% url 'delete_plan' template_for_plan.id %}">Delete plan</a>
+                        {% else %}
+                            <a class="dropdown-item" href="{% url 'new_plan' task.id %}">New Plan</a>
+                        {% endif %}
+                    <div class="dropdown-divider"></div>
+                        {% if created_by_plan %}
+                            <a class="dropdown-item" href="{% url 'delete_plan' created_by_plan.id %}">Delete plan that created task</a>
+                        {% endif %}
+                </div>
+
+
     </div>
     <hr/>
     <table>
@@ -30,13 +47,16 @@
                         <li class="list-group-item"><i>Parent</i>: <a href="{% url 'detail_task' task.get_parent.id %}">{{task.get_parent.title}}</a></li>
                     {% endif %}
                     <li class="list-group-item"><i>Editors</i>: {{editors}}</li>
-                    {% for p in created_by_plan %}
-                     <li class="list-group-item"><i>Created by plan</i>: {{p}}</li>
-                    {% endfor %}
+                    {% if created_by_plan %}
+                        <li class="list-group-item"><i>Created automatically by plan</i></li>
+                    {% endif %}
+                    {% if template_for_plan %}
+                        <li class="list-group-item"><i>This task has a plan set</i></li>
+                    {% endif %}
                 </ul>
             </td>
             <td>
-                {% for p in template_for_plan %}
+                {% if template_for_plan %}
                  <ul class="list-group">
                      <li class="list-group-item active">Periodic Plan</li>
                      <li class="list-group-item"><i>Period</i>: {{p.period}}</li>
@@ -44,7 +64,7 @@
                      <li class="list-group-item"><i>Last update</i>: {{p.last_update_time}}</li>
 
                 </ul>
-                {% endfor %}
+                {% endif %}
             </td>
         </tr>
     </table>

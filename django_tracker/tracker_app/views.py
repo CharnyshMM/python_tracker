@@ -31,6 +31,7 @@ def check_permissions(model):
         return wrapper
     return real_decorator
 
+
 @login_required
 def index(request):
     tasks_list = TaskModel.select_tasks_by_editor(request.user)
@@ -84,8 +85,8 @@ def detail(request, object_id):
     editor_names = []
     for editor in task.editors.all():
         editor_names.append(editor.username)
-    template_for_plan = PlanModel.objects.filter(task_template=task)
-    created_by_plan = PlanModel.objects.filter(created_tasks=task)
+    template_for_plan = PlanModel.objects.filter(task_template=task).first()
+    created_by_plan = PlanModel.objects.filter(created_tasks=task).first()
     subtasks = TaskModel.objects.filter(parent=object_id)
     return render(request,
                   'tracker_app/detail.html',
@@ -142,6 +143,9 @@ def edit_task(request, object_id):
 @check_permissions(TaskModel)
 def delete_task(request, task_id):
     task = get_object_or_404(TaskModel, pk=task_id)
+    template_for_plan = PlanModel.objects.filter(task_template=task)
+    if len(template_for_plan) > 0:
+        return HttpResponse("This task is a template for plan! You can't delete it before deleting plan")
     task.delete()
     return HttpResponseRedirect('/')
 
@@ -168,15 +172,13 @@ def all_plans(request):
     plans_list = PlanModel.objects.filter(author=request.user)
     return render(request, 'tracker_app/plans.html', {'plans_list': plans_list})
 
+
 @login_required
 def delete_plan(request, object_id):
     plan = get_object_or_404(PlanModel,pk=object_id)
     plan.delete()
     return HttpResponseRedirect('all_plans')
 
-#===========================================
-#   AUTHENTICATION
-#===========================================
 
 def signup(request):
     if request.method == 'POST':
