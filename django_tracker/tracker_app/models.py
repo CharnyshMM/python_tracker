@@ -56,7 +56,10 @@ class TaskModel(models.Model):
     @classmethod
     def select_tasks_by_tagslist(cls, query_set, tagslist):
         task_list = []
-        tagslist = [TagModel.objects.get(tag=x) for x in tagslist]
+        try:
+            tagslist = [TagModel.objects.get(tag=x) for x in tagslist]
+        except models.ObjectDoesNotExist:
+            return []
         for task in query_set:
             all_tags = []
             for tag in tagslist:
