@@ -40,6 +40,7 @@
         <tr>
             <td>
                 <ul class="list-group">
+                    <li class="list-group-item active">Details</li>
                     <li class="list-group-item"><i>Author</i>: {{task.author}}</li>
                     <li class="list-group-item"><i>Starts</i>: {{task.start_time}}</li>
                     <li class="list-group-item"><i>Ends</i>: {{task.end_time}}</li>
@@ -47,22 +48,33 @@
                         <li class="list-group-item"><i>Parent</i>: <a href="{% url 'detail_task' task.get_parent.id %}">{{task.get_parent.title}}</a></li>
                     {% endif %}
                     <li class="list-group-item"><i>Editors</i>: {{editors}}</li>
-                    {% if created_by_plan %}
-                        <li class="list-group-item"><i>Created automatically by plan</i></li>
-                    {% endif %}
-                    {% if template_for_plan %}
-                        <li class="list-group-item"><i>This task has a plan set</i></li>
-                    {% endif %}
+                    <li class="list-group-item"><i>Tags</i>:
+                    {% for tag in task.tags.names.all %}
+                        <b>{{tag}}</b>,
+                    {% endfor %}
+                    </li>
                 </ul>
             </td>
             <td>
                 {% if template_for_plan %}
                  <ul class="list-group">
-                     <li class="list-group-item active">Periodic Plan</li>
+                     <li class="list-group-item active">Periodic Plan Set</li>
                      <li class="list-group-item"><i>Period</i>: {{p.period}}</li>
                      <li class="list-group-item"><i>Ends</i>: {{p.end_time}}</li>
                      <li class="list-group-item"><i>Last update</i>: {{p.last_update_time}}</li>
 
+                </ul>
+
+                {% endif %}
+
+            </td>
+            <td>
+                {% if created_by_plan %}
+                <ul>
+                    <li class="list-group-item active">Created by plan</li>
+                    <li class="list-group-item"><i>Created automatically by plan</i></li>
+                    <li class="list-group-item"><i>Period</i>{{created_by_plan.period}}</li>
+                    <li class="list-group-item"><i>Ends repeting</i>{{created_by_plan.end_time}}</li>
                 </ul>
                 {% endif %}
             </td>
@@ -71,13 +83,36 @@
 
     {% if subtasks %}
         <h2>Subtasks:</h2>
-        <ol>
-        {% for subtask in subtasks %}
-
-            <li><a href="{% url 'detail_task' subtask.id %}"> {{subtask.title}} </a></li>
-
-        {% endfor %}
-        </ol>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Priority</th>
+                    <th>Starts</th>
+                    <th>Ends</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for subtask in subtasks %}
+                <tr>
+                    <td>{{forloop.counter}}</td>
+                    <td><a href="{% url 'detail_task' subtask.id %}"> {{subtask.title}} </a></td>
+                    <td>
+                        {% if subtask.priority == 1 %}
+                            <div class="text-warning">HIGH</div>
+                        {% elif subtask.priority == 2 %}
+                            <div class="text-info">MEDIUM</div>
+                        {% elif subtask.priority == 3 %}
+                            <div class="text-muted">LOW</div>
+                        {%endif%}
+                    </td>
+                    <td>{{subtask.start_time}}</td>
+                    <td>{{subtask.end_time}}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
     {% endif %}
 
 {% endblock %}

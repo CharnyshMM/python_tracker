@@ -52,7 +52,6 @@ class PlanForm(forms.Form):
 
     def create_plan(self,task_template):
         self.clean()
-        period = None
         if self.get_mode()=='fixed':
             return PlanModel(task_template=task_template,
                              fixed_period=self.get_period(),

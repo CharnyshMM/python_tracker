@@ -9,11 +9,12 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 
-from .forms import TaskForm, PlanForm, TaskListViewForm
+from .forms import TaskForm, PlanForm
 from .models import TaskModel, PlanModel
 from functools import wraps
 from django.utils import timezone
 import datetime as dt
+import re
 
 
 def check_permissions(model):
@@ -36,26 +37,22 @@ def check_permissions(model):
 def index(request):
     tasks_list = TaskModel.select_tasks_by_editor(request.user)
 
-    if request.method == "POST":
-        form = TaskListViewForm(request.POST)
-    else:
-        form = TaskListViewForm()
-
-    if form.is_valid():
-        if form.cleaned_data['include_shared_tasks']:
-            tasks_list = TaskModel.select_tasks_by_editor(request.user)
-        tasks_list = tasks_list.order_by(form.cleaned_data['show_mode'])
-
-        if form.cleaned_data['selected_filter'] == 'tags':
-            tasks_list = TaskModel.select_tasks_by_tagslist(tasks_list,form.cleaned_data['text_field'])
-
+    key = request.GET.get('key')
+    query = request.GET.get('query')
+    order = request.GET.get('order')
+    if request.GET.get('o'):
+        print(request.GET.get('o'))
+    if order is None:
+        order='priority'
+    if query:
+        if key == 'tags':
+            tasks_list = TaskModel.filter_by_tags(re.findall(r'(\w+)\W*',query))
         else:
-            title = " ".join(form.cleaned_data['text_field'])
-            tasks_list = tasks_list.filter(title__icontains=title)
-
+            tasks_list = tasks_list.filter(title__icontains=query)
+    tasks_list = tasks_list.order_by(order)
 
     template = loader.get_template('tracker_app/index.html')
-    context = {'tasks_list': tasks_list, 'form': form}
+    context = {'tasks_list': tasks_list}
     return HttpResponse(template.render(context, request))
 
 
@@ -109,12 +106,14 @@ def new_task(request, object_id):
             task.author = request.user
             if object_id != '0':
                 task.parent = TaskModel.objects.get(id=object_id)
-            task.save()
+
             users = form.cleaned_data.get('editors')
-            print(users)
+            tags = form.cleaned_data['tags']
+            print(tags)
             for u in users:
                 task.editors.add(u)
             task.save()
+            form.save_m2m()
             return redirect('index')
     else:
         form = TaskForm()
@@ -128,9 +127,9 @@ def edit_task(request, object_id):
         form = TaskForm(request.POST)
         if form.is_valid():
             task = form.save(commit=False)
-            TaskModel.objects.filter(pk=object_id).update(title=task.title,
-                                                          start_time=task.start_time,
-                                                          end_time=task.end_time)
+            task.id = object_id
+            task.save(update_fields=('title','start_time','end_time','priority'))
+            form.save_m2m()
             return redirect('index')
     else:
         task = get_object_or_404(TaskModel, pk=object_id)

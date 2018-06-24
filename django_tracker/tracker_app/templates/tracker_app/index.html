@@ -1,49 +1,37 @@
 {% extends 'tracker_app/base.html' %}
 
+
 {% block title %}Tasks list{% endblock %}
 
 {% block content%}
-    <div class="search_bar">
+         <ul class="nav nav-tabs nav-justified">
+          <li class="nav-item" ><a class="nav-link active"  href="{% url 'index' %}">All tasks</a></li>
+          <li class="nav-item" ><a  href="{% url 'actuals' %}">Actuals</a></li>
+          <li class="nav-item" ><a  href="{% url 'all_plans' %}">All plans</a></li>
+        </ul>
+
         <a href="{% url 'new_task' 0 %}">
             <button class="btn btn-primary">Create Task</button>
         </a>
         <a href="{% url 'actuals' %}">
             <button class="btn btn-primary">Actual tasks</button>
         </a>
-    <form method="post">
 
-
-        {% csrf_token %}
-
-        {{ form.non_field_errors }}
-
-        {{ form.source.errors }}
-        {{ form.source }}
-        <table>
-            <tr>
-                <td>
-                    {{ form.include_shared_tasks.label}}
-                    {{ form.include_shared_tasks}}
-                </td>
-                <td>
-                    {{ form.show_mode.errors }}
-                    {{ form.show_mode }}
-                </td>
-                <td>
-                    {{ form.text_field.errors }}
-                    {{ form.text_field }}
-                </td>
-                <td>
-                    {{ form.selected_filter.errors }}
-                    {{ form.selected_filter }}
-                </td>
-                <td>
-                    <button type="submit">Filter</button>
-                </td>
-            </tr>
-        </table>
-    </form>
     </div>
+    <form id="filter_form" method="GET" onchange="changed()">
+        <select name="order" value="{{ request.GET.order }}" >
+            <option value="priority">Priority</option>
+            <option value="start_time">Start time</option>
+            <option value="end_time">End time</option>
+        </select>
+        <select name="key">
+            <option value="tags">Tags</option>
+            <option value="title">Title</option>
+        </select>
+        <input type="text" name="query" value="{{ request.GET.query }}" placeholder="Search"/>
+        <input type="submit" value="Search"/>
+    </form>
+
 
     {% if tasks_list %}
         <table class="table">
@@ -112,17 +100,9 @@
 
 
 <script>
-function showView() {
-    var s_check_bx = document.getElementById("shared_tasks_check");
-    var s_block = document.getElementById("shared_tasks_block");
-    var s_label = document.getElementById("shared_label");
-    if (s_check_bx.checked == true){
-        s_label.innerHTML = "Hide shared tasks";
-        s_block.style.display = "block";
-    } else {
-        s_label.innerHTML = "Show shared tasks";
-        s_block.style.display = "none";
-    }
+function changed() {
+    var form = document.getElementById("filter_form");
+    form.submit();
 }
 </script>
 

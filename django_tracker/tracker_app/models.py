@@ -4,6 +4,7 @@ from django.db.models import Q
 from django.utils import timezone
 from lib.entities.plan import Period
 
+from taggit.managers import TaggableManager
 import datetime as dt
 
 
@@ -33,7 +34,7 @@ class TaskModel(models.Model):
     end_time = models.DateTimeField(null=True)
     parent = models.ForeignKey('self', null=True, blank=True)
     priority = models.IntegerField(choices=Priority.PRIORITY_CHOICES, default=Priority.MEDIUM)
-    tags = models.ManyToManyField(TagModel, blank=True)
+    tags = TaggableManager()
 
     def get_parent(self):
         if self.parent:
@@ -54,19 +55,14 @@ class TaskModel(models.Model):
         return TaskModel.objects.filter(author__id__exact=user.id)
 
     @classmethod
-    def select_tasks_by_tagslist(cls, query_set, tagslist):
-        task_list = []
-        try:
-            tagslist = [TagModel.objects.get(tag=x) for x in tagslist]
-        except models.ObjectDoesNotExist:
-            return []
-        for task in query_set:
-            all_tags = []
-            for tag in tagslist:
-                all_tags.append(tag in task.tags.all())
-            if all(all_tags):
-                task_list.append(task)
-        return task_list
+    def filter_by_tags(cls, tagslist):
+        query = None
+        for tag in tagslist:
+            print(tag)
+            if not query:
+                query = Q(tags__name__in=[tag])
+            query = query and Q(tags__name__in=[tag])
+        return cls.objects.filter(query)
 
     def user_can_access(self,user):
         if self.author.id == user.id or user in self.editors.all() > 0:
