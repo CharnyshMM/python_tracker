@@ -28,6 +28,7 @@ class TaskModel(models.Model):
     parent = models.ForeignKey('self', null=True, blank=True)
     priority = models.IntegerField(choices=Priority.PRIORITY_CHOICES, default=Priority.MEDIUM)
     tags = TaggableManager(blank=True, help_text='input tags separated with spaces or commas')
+    active = models.BooleanField(default=True)
 
     def get_parent(self):
         if self.parent:
@@ -62,7 +63,6 @@ class TaskModel(models.Model):
             return True
         return False
 
-
     def __str__(self):
         return self.title
 
@@ -94,7 +94,6 @@ class PlanModel(models.Model):
             task.save()
             self.created_tasks.add(task)
             self.save()
-
 
     def increment_dates(self, offset_time):
         return Period.add_timedelta(self.period, offset_time)
