@@ -13,6 +13,7 @@ urlpatterns = [
     url(r'^accounts/signup/$', views.signup, name='signup'),
     # /tracker_app/task/5
     url(r'^tasks/(?P<object_id>\d+)/$', view=views.detail, name='detail_task'),
+    url(r'^tasks/(?P<object_id>\d+)/status/$', view=views.task_status, name='task_status'),
     # /tracker_app/task/new
     url(r'^tasks/(?P<object_id>\d+)/new/$', view=views.new_task, name='new_task'),
     # /tracker_app/task/5/edit

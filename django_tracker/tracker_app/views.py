@@ -41,8 +41,13 @@ def index(request):
     key = request.GET.get('key')
     query = request.GET.get('query')
     order = request.GET.get('order')
-    if request.GET.get('o'):
-        print(request.GET.get('o'))
+    active_only = request.GET.get("active_only")
+    tops_only = request.GET.get("tops_only")
+    print(tops_only)
+    if tops_only is None or tops_only:
+        tasks_list = tasks_list.filter(parent=None)
+    if active_only:
+        tasks_list = tasks_list.filter(active=True)
     if order is None:
         order='priority'
     if query:
@@ -62,7 +67,7 @@ def actuals(request):
     for plan in PlanModel.objects.all():
         plan.update()
 
-    tasks_list = TaskModel.select_tasks_by_editor(request.user)
+    tasks_list = TaskModel.select_tasks_by_editor(request.user).filter(active=True)
     report_time = timezone.now()
     time_range = (report_time - dt.timedelta(minutes=3), report_time + dt.timedelta(minutes=3))
     starting_tasks = tasks_list.filter(start_time__range=time_range)
@@ -138,8 +143,9 @@ def edit_task(request, object_id):
 
 @login_required
 @check_permissions(TaskModel)
-def delete_task(request, task_id):
-    task = get_object_or_404(TaskModel, pk=task_id)
+def delete_task(request, object_id):
+    print("it deletes")
+    task = get_object_or_404(TaskModel, pk=object_id)
     template_for_plan = PlanModel.objects.filter(task_template=task)
     if len(template_for_plan) > 0:
         return HttpResponse("This task is a template for plan! You can't delete it before deleting plan")
@@ -147,21 +153,33 @@ def delete_task(request, task_id):
     return HttpResponseRedirect('/')
 
 
+
+@login_required
+@check_permissions(TaskModel)
+def task_status(request, object_id):
+    task = get_object_or_404(TaskModel, pk=object_id)
+    task.active = not task.active
+    task.save()
+
+    return redirect("index")
+
+
 @login_required
 @check_permissions(TaskModel)
 def add_plan(request, object_id):
+    task = get_object_or_404(TaskModel, pk=object_id)
     if request.method == "POST":
         form = PlanForm(request.POST)
         if form.is_valid():
-            task = get_object_or_404(TaskModel, pk=object_id)
             plan = form.create_plan(task)
             plan.author = request.user
             plan.save()
             plan.update()
             return redirect('index')
     else:
+
         form = PlanForm()
-    return render(request, 'tracker_app/plan_form.html', {'form': form})
+    return render(request, 'tracker_app/plan_form.html', {'form': form, 'task_title':task.title})
 
 
 @login_required
