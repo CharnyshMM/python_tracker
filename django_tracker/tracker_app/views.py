@@ -1,5 +1,5 @@
 # Create your views here.
-
+from django.db.models import Q
 from django.http import HttpResponse
 from django.template import loader
 
@@ -138,13 +138,25 @@ def add_reminder(request, object_id):
         return render(request, 'tracker_app/reminder_form.html', {'form': form, 'task_title': task.title})
 
 @login_required
-
 def delete_reminder(request, object_id):
     reminder = get_object_or_404(ReminderModel, pk=object_id)
     task_id = reminder.task.id
     reminder.delete()
     return task_details(request, task_id)
 
+@login_required
+def all_reminders(request):
+    report_time = timezone.now()
+    
+    reminders = ReminderModel.objects.filter(Q(alert_time__lt=report_time) & Q(dismissed=False))
+    return render(request, 'tracker_app/all_reminders.html', {'reminders': reminders})
+
+@login_required
+def dismiss_reminder(request, object_id):
+    reminder = get_object_or_404(ReminderModel, pk=object_id)
+    reminder.dismissed = True
+    reminder.save()
+    return all_reminders(request)
 
 @login_required
 @check_permissions(TaskModel)

@@ -9,6 +9,11 @@
     <link href="//cdn.bootcss.com/bootstrap-datetimepicker/4.17.44/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
 {% endblock %}
 {% block content%}
+<ul class="nav nav-tabs">
+          <li class="nav-item active" ><a  class="nav-link "href="#"><h3>Reminder for {{task_title}}</h3></a></li>
+    </ul>
+<hr/>
+
 <form  method="post" role="form">
     {% csrf_token %}
 
@@ -17,7 +22,6 @@
     {{ form.source.errors }}
     {{ form.source }}
 
-    <h1>Reminder for {{task_title}}</h1>
         {% if form.non_field_errors %}
             <div class="alert alert-danger" role="alert">
             {{form.non_field_errors}}

@@ -1,0 +1,47 @@
+{% extends 'tracker_app/base.html' %}
+
+{% load widget_tweaks %}
+
+{% block title %}Reminders{% endblock %}
+
+{% block style %}
+
+{% endblock %}
+
+{% block content %}
+ <ul class="nav nav-tabs nav-justified">
+          <li class="nav-item " ><a   href="{% url 'index' %}">All tasks</a></li>
+          <li class="nav-item" ><a  href="{% url 'actuals' %}">Actual Tasks</a></li>
+          <li class="nav-item" ><a class="nav-link active" href="{% url 'all_reminders' %}">Reminders</a></li>
+          <li class="nav-item" ><a  href="{% url 'all_plans' %}">All plans</a></li>
+        </ul>
+    <hr/>
+
+<table class="table">
+    <thead class="thead-light">
+        <tr>
+            <th>#</th>
+            <th>Task</th>
+            <th>Priority</th>
+            <th>Time</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for reminder in reminders %}
+        <tr>
+            <td>{{forloop.counter}}</td>
+            <td>{{reminder.task.title}}</td>
+            <td>{{reminder.task.priority}}</td>
+            <td>{{reminder.alert_time}}</td>
+            <td>
+                <a href="{% url 'dismiss_reminder' reminder.id %}">
+                    <button>Dismiss</button>
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

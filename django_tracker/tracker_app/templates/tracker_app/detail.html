@@ -3,9 +3,15 @@
 {% block title %}{{task.title}}{% endblock %}
 
 {% block content %}
+        <ul class="nav nav-tabs nav-justified">
+          <li class="nav-item " ><a  class="nav-link active"href="#"><h3>{{task.title}}</h3></a></li>
+          <li class="nav-item " ><a href="{% url 'index' %}">All tasks</a></li>
+          <li class="nav-item" ><a  href="{% url 'actuals' %}">Actual Tasks</a></li>
+          <li class="nav-item" ><a  href="{% url 'all_reminders' %}">Reminders</a></li>
+          <li class="nav-item " ><a   href="{% url 'all_plans' %}">All plans</a></li>
+        </ul>
 
 
-        <h1>{{task.title}}</h1>
         <div class="btn-toolbar justify-content-end">
         <a href="{% url 'new_task' task.id %}">
             <button type="button" class="btn btn-info ">Create Subtask</button>
