@@ -1,0 +1,55 @@
+{% extends 'tracker_app/base.html' %}
+
+{% load widget_tweaks %}
+
+{% block title %}New Reminder{% endblock %}
+
+{% block style %}
+    <link href="//cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="//cdn.bootcss.com/bootstrap-datetimepicker/4.17.44/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+{% endblock %}
+{% block content%}
+<form  method="post" role="form">
+    {% csrf_token %}
+
+    {{ form.non_field_errors }}
+
+    {{ form.source.errors }}
+    {{ form.source }}
+
+    <h1>Reminder for {{task_title}}</h1>
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+            {{form.non_field_errors}}
+            </div>
+        {% endif %}
+        {% if form.alert_time.errors %}
+            <div class="alert alert-danger" role="alert">
+            {{form.alert_time.errors}}
+            </div>
+        {% endif %}
+        <div class="container">
+            <div class="row">
+                <div class='col-sm-6'>
+                    <div class="form-group">
+                        {{form.alert_time.label_tag}}
+                        <div class='input-group date' id='datetimepicker1'>
+                            {% render_field form.alert_time class="form-control" %}
+                            <span class="input-group-addon">
+                                <span class="glyphicon glyphicon-calendar"></span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    $(function () {
+                        $('#datetimepicker1').datetimepicker({format: 'YYYY-MM-DD HH:mm:ss'});
+                    });
+                </script>
+            </div>
+        </div>
+        <small class="form-text text-muted">Specify a time when to notice you about the task</small>
+        <input type="submit" class="btn btn-primary " value="Submit"/>
+</form>
+
+{% endblock %}

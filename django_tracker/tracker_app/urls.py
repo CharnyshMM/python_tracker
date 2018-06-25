@@ -12,8 +12,11 @@ urlpatterns = [
     url(r'^accounts/logout/$', auth_views.logout,{'template_name': 'tracker_app/logout.html'}, name='logout'),
     url(r'^accounts/signup/$', views.signup, name='signup'),
     # /tracker_app/task/5
-    url(r'^tasks/(?P<object_id>\d+)/$', view=views.detail, name='detail_task'),
+    url(r'^tasks/(?P<object_id>\d+)/$', view=views.task_details, name='detail_task'),
+
+    url(r'^tasks/(?P<object_id>\d+)/new_reminder/$', view=views.add_reminder, name='add_reminder'),
     url(r'^tasks/(?P<object_id>\d+)/status/$', view=views.task_status, name='task_status'),
+    url(r'^reminders/(?P<object_id>\d+)/delete/$',view=views.delete_reminder, name='delete_reminder'),
     # /tracker_app/task/new
     url(r'^tasks/(?P<object_id>\d+)/new/$', view=views.new_task, name='new_task'),
     # /tracker_app/task/5/edit

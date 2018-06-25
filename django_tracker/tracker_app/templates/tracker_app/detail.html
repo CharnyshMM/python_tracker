@@ -10,6 +10,9 @@
         <a href="{% url 'new_task' task.id %}">
             <button type="button" class="btn btn-info ">Create Subtask</button>
         </a>
+        <a href="{% url 'add_reminder' task.id %}">
+            <button type="button" class="btn btn-info ">Add Reminder</button>
+        </a>
         <a href="{% url 'edit_task' task.id  %}">
             <button type="button" class="btn btn-warning ">Edit</button>
         </a>
@@ -38,8 +41,8 @@
         <hr/>
     <table>
         <tr>
-            <td>
-                <ul class="list-group">
+            <td class="align-baseline">
+                <ul class="list-group align-top">
                     <li class="list-group-item active">Details</li>
                     <li class="list-group-item"><i>Author</i>: {{task.author}}</li>
                     <li class="list-group-item"><i>Starts</i>: {{task.start_time}}</li>
@@ -55,9 +58,9 @@
                     </li>
                 </ul>
             </td>
-            <td>
+            <td class="align-baseline">
                 {% if template_for_plan %}
-                 <ul class="list-group">
+                 <ul class="list-group align-top">
                      <li class="list-group-item active">
                          <a href="{% url 'plan_details' template_for_plan.id %}">Periodic Plan</a>
                      </li>
@@ -70,9 +73,9 @@
                 {% endif %}
 
             </td>
-            <td>
+            <td class="align-baseline">
                 {% if created_by_plan %}
-                <ul>
+                <ul class="list-group align-top">
                     <li class="list-group-item active">Created by plan</li>
                     <li class="list-group-item"><i>Created automatically by</i>
                         <a href="{% url 'plan_details' created_by_plan.id %}">Periodic Plan</a>
@@ -81,6 +84,25 @@
                     <li class="list-group-item"><i>Ends repeting</i>{{created_by_plan.end_time}}</li>
                 </ul>
                 {% endif %}
+            </td>
+            <td class="align-baseline">
+
+                <ul class="list-group align-top">
+                    <li class="list-group-item active">Reminders</li>
+                    {% if reminders %}
+                        {% for r in reminders %}
+                        <li class="list-group-item">
+                            {{r.alert_time}}
+                            <a href="{% url 'delete_reminder' r.id %}">
+                                <button>Delete</button>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="list-group-item"> no reminders set</li>
+                    {% endif %}
+                </ul>
+
             </td>
         </tr>
     </table>
@@ -118,5 +140,6 @@
             </tbody>
         </table>
     {% endif %}
+
 
 {% endblock %}

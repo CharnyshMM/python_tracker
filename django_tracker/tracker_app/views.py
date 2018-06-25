@@ -10,8 +10,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 
-from .forms import TaskForm, PlanForm, usernames_to_users
-from .models import TaskModel, PlanModel
+from .forms import TaskForm, PlanForm, ReminderForm
+from .models import TaskModel, PlanModel, ReminderModel
 from functools import wraps
 from django.utils import timezone
 import datetime as dt
@@ -43,8 +43,7 @@ def index(request):
     order = request.GET.get('order')
     active_only = request.GET.get("active_only")
     tops_only = request.GET.get("tops_only")
-    print(tops_only)
-    if tops_only is None or tops_only:
+    if tops_only:
         tasks_list = tasks_list.filter(parent=None)
     if active_only:
         tasks_list = tasks_list.filter(active=True)
@@ -81,16 +80,18 @@ def actuals(request):
                     }
                   )
 
+
 @login_required
 @check_permissions(model=TaskModel)
-def detail(request, object_id):
+def task_details(request, object_id):
     task = get_object_or_404(TaskModel, pk=object_id)
     editor_names = []
     for editor in task.editors.all():
         editor_names.append(editor.username)
     template_for_plan = PlanModel.objects.filter(task_template=task).first()
     created_by_plan = PlanModel.objects.filter(created_tasks=task).first()
-    subtasks = TaskModel.objects.filter(parent=object_id)
+    subtasks = TaskModel.objects.filter(parent__id=object_id)
+    reminders = ReminderModel.objects.filter(task__id=object_id)
     return render(request,
                   'tracker_app/detail.html',
                   {'task': task,
@@ -98,6 +99,7 @@ def detail(request, object_id):
                    'editors': editor_names,
                    'template_for_plan': template_for_plan,
                    'created_by_plan':created_by_plan,
+                   'reminders':reminders,
                    }
                   )
 
@@ -118,8 +120,30 @@ def new_task(request, object_id):
             return redirect('index')
     else:
         form = TaskForm()
-    users = User.objects.all()
-    return render(request, 'tracker_app/task_form.html', {'form': form, 'users': users})
+    return render(request, 'tracker_app/task_form.html', {'form': form})
+
+@login_required
+@check_permissions(TaskModel)
+def add_reminder(request, object_id):
+    task = get_object_or_404(TaskModel,pk=object_id)
+    if request.method == "POST":
+        form = ReminderForm(request.POST)
+        if form.is_valid():
+            reminder = form.save(commit=False)
+            reminder.task = task
+            reminder.save()
+            return task_details(request, task.id)
+    else:
+        form = ReminderForm()
+        return render(request, 'tracker_app/reminder_form.html', {'form': form, 'task_title': task.title})
+
+@login_required
+
+def delete_reminder(request, object_id):
+    reminder = get_object_or_404(ReminderModel, pk=object_id)
+    task_id = reminder.task.id
+    reminder.delete()
+    return task_details(request, task_id)
 
 
 @login_required
