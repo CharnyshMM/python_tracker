@@ -17,7 +17,7 @@
     <form id="task_form" method="post">
         {% csrf_token %}
 
-        {{ form.non_field_errors }}
+
 
         {{ form.source.errors }}
         {{ form.source }}
@@ -44,7 +44,11 @@
             {{form.start_time.errors}}
             </div>
         {% endif %}
-
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+            {{form.non_field_errors}}
+            </div>
+        {% endif %}
         <div class="container">
             <div class="row">
                 <div class='col-sm-6'>
