@@ -66,6 +66,10 @@ class TaskModel(models.Model):
     def __str__(self):
         return self.title
 
+class ReminderModel(models.Model):
+    task = models.ForeignKey(TaskModel, blank=True, null=False)
+    alert_time = models.DateTimeField(null=False)
+    dismissed = models.BooleanField(default=False)
 
 class PlanModel(models.Model):
     task_template = models.ForeignKey(TaskModel, null=False)
@@ -85,11 +89,15 @@ class PlanModel(models.Model):
     def update(self):
         while self.needs_update(timezone.now()):
             task = self.get_latest_task()
+            reminders = ReminderModel.objects.filter(task=task)
             task.save()
             task.pk = None
             task.start_time = self.increment_dates(task.start_time)
-            if task.end_time:
-                task.end_time = self.increment_dates(task.end_time)
+            task.end_time = self.increment_dates(task.end_time)
+            for r in reminders:
+                r.pk = None
+                r.alert_time = self.increment_dates(r.alert_time)
+                r.save()
             self.last_update_time = task.start_time
             task.save()
             self.created_tasks.add(task)

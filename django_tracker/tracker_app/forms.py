@@ -1,5 +1,5 @@
 from django import forms
-from .models import TaskModel, PlanModel, Priority
+from .models import TaskModel, PlanModel, Priority, ReminderModel
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 import re
@@ -39,6 +39,11 @@ class TaskForm(forms.ModelForm):
             msg = "Task start time can't be greater than end time!"
             self.add_error("start_time", msg)
 
+
+class ReminderForm(forms.ModelForm):
+    class Meta:
+        model = ReminderModel
+        fields = ('alert_time',)
 
 
 
