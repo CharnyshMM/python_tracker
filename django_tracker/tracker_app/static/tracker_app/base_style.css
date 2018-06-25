@@ -1,3 +1,7 @@
+#header_background {
+    background: #ccddff;
+}
+
 #header_table {
     width:100%;
 }
@@ -9,3 +13,13 @@
     border-radius: 5px;
 }
 
+.contents {
+    margin-left: 5%;
+    margin-right: 5%;
+    padding: 0% 5% 15% 5%;
+    background: white;
+}
+
+body {
+    background: whitesmoke;
+}
