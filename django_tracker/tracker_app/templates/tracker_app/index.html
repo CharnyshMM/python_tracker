@@ -16,11 +16,11 @@
             <button class="btn btn-primary">Create Task</button>
         </a>
     <form id="filter_form" method="GET" >
-        <input type="checkbox" checked="true" id="tops_only" name="tops_only"/>
+        <input type="checkbox" checked="checked" id="tops_only" name="tops_only"/>
         <label for="tops_only">Top level only</label>
         <input type="checkbox" id="active_only" name="active_only"/>
         <label for="active_only">Active only</label>
-        <select name="order" value="{{ request.GET.order }}">
+        <select name="order">
             <option value="priority">Priority</option>
             <option value="start_time">Start time</option>
             <option value="end_time">End time</option>
