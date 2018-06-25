@@ -5,21 +5,22 @@
 
 {% block content%}
          <ul class="nav nav-tabs nav-justified">
-          <li class="nav-item" ><a class="nav-link active"  href="{% url 'index' %}">All tasks</a></li>
+          <li class="nav-item " ><a class="nav-link active"  href="{% url 'index' %}">All tasks</a></li>
           <li class="nav-item" ><a  href="{% url 'actuals' %}">Actuals</a></li>
           <li class="nav-item" ><a  href="{% url 'all_plans' %}">All plans</a></li>
         </ul>
+    <hr/>
 
-        <a href="{% url 'new_task' 0 %}">
+    <div class="btn-toolbar justify-content-between" role="toolbar" aria-label="Toolbar with button groups">
+    <a href="{% url 'new_task' 0 %}">
             <button class="btn btn-primary">Create Task</button>
         </a>
-        <a href="{% url 'actuals' %}">
-            <button class="btn btn-primary">Actual tasks</button>
-        </a>
-
-    </div>
-    <form id="filter_form" method="GET" onchange="changed()">
-        <select name="order" value="{{ request.GET.order }}" >
+    <form id="filter_form" method="GET" >
+        <input type="checkbox" checked="true" id="tops_only" name="tops_only"/>
+        <label for="tops_only">Top level only</label>
+        <input type="checkbox" id="active_only" name="active_only"/>
+        <label for="active_only">Active only</label>
+        <select name="order" value="{{ request.GET.order }}">
             <option value="priority">Priority</option>
             <option value="start_time">Start time</option>
             <option value="end_time">End time</option>
@@ -28,17 +29,18 @@
             <option value="tags">Tags</option>
             <option value="title">Title</option>
         </select>
-        <input type="text" name="query" value="{{ request.GET.query }}" placeholder="Search"/>
+        <input type="search" name="query" value="{{ request.GET.query }}" placeholder="Search"/>
         <input type="submit" value="Search"/>
     </form>
-
+</div>
 
     {% if tasks_list %}
         <table class="table">
           <thead class="thead-light">
             <tr>
               <th scope="col">#</th>
-              <th scope="col">Title</th>
+              <th scope="col">Done</th>
+              <th style="width: 20%">Title</th>
               <th scope="col">Priority</th>
               <th scope="col">Starts</th>
               <th scope="col">Ends</th>
@@ -50,11 +52,22 @@
             {% for task in tasks_list %}
             <tr>
             <th scope="row">{{forloop.counter}}</th>
+            <td>
+                {% if task.active %}
+                <a href="{% url 'task_status' task.id %}">
+                    <button class="text-warning">NO</button>
+                </a>
+                {% else %}
+                <a href="{% url 'task_status' task.id %}">
+                     <button class="text-success">YES</button>
+                </a>
+                {% endif %}
+            </td>
             <td><a href="{% url 'detail_task' task.id %}">
                 {% if task.author.id == user.id %}
-                    {{task.title}}
+                    {{task.title|slice:":15" }}
                 {% else %}
-                    {{task.title}} (shared)
+                    {{task.title|slice:":15" }} (shared)
                 {% endif %}
                 </a>
             </td>
@@ -95,8 +108,6 @@
             No tasks here... You can <a href="{% url 'new_task' 0 %}">Create a task</a>
         </div>
     {% endif %}
-
-
 
 
 <script>
