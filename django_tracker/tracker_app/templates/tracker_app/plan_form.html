@@ -1,12 +1,104 @@
-{% block title %}Task{% endblock %}
+{% extends 'tracker_app/base.html' %}
 
+{% load widget_tweaks %}
+
+{% block title %}New Plan{% endblock %}
+
+{% block style %}
+    <link href="//cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="//cdn.bootcss.com/bootstrap-datetimepicker/4.17.44/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+    <style>
+        #custom {
+            display: none;
+        }
+    </style>
+{% endblock %}
 {% block content%}
 
-    <h1>Task creation!</h1>
-    <form  method="post" role="form">
+<h1>Plan for {{task_title}}</h1>
+<form  method="post" role="form">
     {% csrf_token %}
-    {{ form.as_p }}
-    <input type="submit" value="Submit" />
+
+    {{ form.non_field_errors }}
+
+    {{ form.source.errors }}
+    {{ form.source }}
+
+    <div class="form-group">
+        {{form.mode.label_tag}}
+        {% render_field form.mode id="mode_selector" onchange="changed()" class="form-control form-control-lg" %}
+        <small class="form-text text-muted">Select period kind</small>
+    </div>
+
+    <div id="fixed" class="form-group">
+        {{form.fixed_period.label_tag}}
+        {% render_field form.fixed_period class="form-control form-control-lg"%}
+    </div>
+    <div id="custom">
+    {% if form.start_time.errors %}
+        <div class="alert alert-danger" role="alert">
+        {{form.start_time.errors}}
+        </div>
+    {% endif %}
+    <div class="container">
+        <div class="row">
+            <div class='col-sm-6'>
+                <div class="form-group">
+                    {{form.custom_period.label_tag}}
+                    <div class='input-group date' id='datetimepicker1'>
+                        {% render_field form.custom_period class="form-control" %}
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <script type="text/javascript">
+                $(function () {
+                    $('#datetimepicker1').datetimepicker({format: 'YYYY-MM-DD HH:mm:ss'});
+                });
+            </script>
+        </div>
+    </div>
+
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class='col-sm-6'>
+                <div class="form-group">
+                    {{form.end_time.label_tag}}
+                    <div class='input-group date' id='datetimepicker2'>
+                        {% render_field form.end_time class="form-control" %}
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <script type="text/javascript">
+                $(function () {
+                    $('#datetimepicker2').datetimepicker({format: 'YYYY-MM-DD HH:mm:ss'});
+                });
+            </script>
+        </div>
+    </div>
+
+    <input type="submit" class="" value="Submit" />
 </form>
+
+<script>
+function changed() {
+    var selector = document.getElementById("mode_selector");
+    if (selector.options[selector.selectedIndex].text == "custom") {
+        document.getElementById("fixed").style.display = "none";
+         document.getElementById("custom").style.display = "block";
+    }
+    else {
+        document.getElementById("custom").style.display = "none";
+        document.getElementById("fixed").style.display = "block";
+    }
+}
+</script>
 
 {% endblock %}
