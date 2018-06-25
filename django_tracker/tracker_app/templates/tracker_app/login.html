@@ -5,6 +5,7 @@
 {% block content %}
 
  <h2>Login</h2>
+  <p>You can also <a href="{% url 'signup' %}">Sign Up</a></p>
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}

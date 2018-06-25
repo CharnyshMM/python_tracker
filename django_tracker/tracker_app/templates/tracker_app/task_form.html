@@ -12,8 +12,10 @@
 {% endblock %}
 
 {% block content%}
+    <ul class="nav nav-tabs">
+          <li class="nav-item " ><a  class="nav-link active"href="#"><h3>New Task</h3></a></li>
+    </ul>
     <hr/>
-    <h1>Creating new task</h1>
     <form id="task_form" method="post">
         {% csrf_token %}
 

@@ -3,7 +3,14 @@
 {% block title %}Plan - {{plan.task_template.title}}{% endblock %}
 
 {% block content %}
-    <h1>Plan - {{plan.task_template.title}}</h1>
+    <ul class="nav nav-tabs nav-justified">
+      <li class="nav-item " ><a  class="nav-link active"href="#"><h2>Plan for{{plan.task_template.title}}</h2></a></li>
+      <li class="nav-item " ><a href="{% url 'index' %}">All tasks</a></li>
+      <li class="nav-item" ><a  href="{% url 'actuals' %}">Actual Tasks</a></li>
+      <li class="nav-item" ><a  href="{% url 'all_reminders' %}">Reminders</a></li>
+      <li class="nav-item " ><a   href="{% url 'all_plans' %}">All plans</a></li>
+    </ul>
+
     <a href="{% url 'delete_plan' plan.id %}">
                     <button type="button" class="btn btn-danger btn-sm">Delete</button>
     </a>

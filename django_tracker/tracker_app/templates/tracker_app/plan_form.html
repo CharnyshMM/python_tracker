@@ -14,8 +14,10 @@
     </style>
 {% endblock %}
 {% block content%}
-
-<h1>Plan for {{task_title}}</h1>
+<ul class="nav nav-tabs">
+          <li class="nav-item " ><a  class="nav-link active"href="#"><h3>Plan for {{task_title}}</h3></a></li>
+    </ul>
+<hr/>
 <form  method="post" role="form">
     {% csrf_token %}
 
@@ -35,9 +37,9 @@
         {% render_field form.fixed_period class="form-control form-control-lg"%}
     </div>
     <div id="custom">
-    {% if form.start_time.errors %}
+    {% if form.custom_period.errors %}
         <div class="alert alert-danger" role="alert">
-        {{form.start_time.errors}}
+        {{form.custom_period.errors}}
         </div>
     {% endif %}
     <div class="container">
@@ -63,6 +65,12 @@
 
     </div>
 
+
+    {% if form.end_time.errors %}
+        <div class="alert alert-danger" role="alert">
+        {{form.end_time.errors}}
+        </div>
+    {% endif %}
     <div class="container">
         <div class="row">
             <div class='col-sm-6'>

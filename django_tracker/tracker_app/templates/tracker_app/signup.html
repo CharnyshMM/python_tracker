@@ -1,21 +1,58 @@
 {% extends 'tracker_app/base.html' %}
+
+{% load widget_tweaks %}
+
 {% block title %}Signing up - Py_Tracker{% endblock %}
 {% block content %}
   <h2>Sign up</h2>
   <form method="post">
     {% csrf_token %}
-    {% for field in form %}
-      <p>
-        {{ field.label_tag }}<br/>
-        {{ field }}
-        {% if field.help_text %}
-          <small style="color: grey">{{ field.help_text }}</small>
-        {% endif %}
-        {% for error in field.errors %}
-          <p style="color: red">{{ error }}</p>
-        {% endfor %}
-      </p>
-    {% endfor %}
-    <button type="submit">Sign up</button>
+
+    {{ form.non_field_errors }}
+
+      {% if form.source.errors %}
+        <div class="alert alert-danger" role="alert">
+        {{ form.source.errors }}
+        </div>
+    {% endif %}
+
+    {{ form.source }}
+
+
+    {% if form.username.errors %}
+        <div class="alert alert-danger" role="alert">
+        {{form.username.errors}}
+        </div>
+    {% endif %}
+    <div class="form-group  row">
+        <div class="col-xs-4">
+        {{form.username.label_tag}}
+        {% render_field form.username class="form-control" %}
+        </div>
+    </div>
+    {% if form.password1.errors %}
+        <div class="alert alert-danger" role="alert">
+        {{form.password1.errors}}
+        </div>
+    {% endif %}
+    <div class="form-group row">
+        <div class="col-xs-4">
+        {{form.password1.label_tag}}
+        {% render_field form.password1 class="form-control" %}
+        </div>
+    </div>
+    {% if form.password2.errors %}
+        <div class="alert alert-danger" role="alert">
+        {{form.password2.errors}}
+        </div>
+    {% endif %}
+    <div class="form-group row">
+        <div class="col-xs-4">
+        {{form.password2.label_tag}}
+        {% render_field form.password2 class="form-control" %}
+        </div>
+    </div>
+
+    <button type="submit" class="btn-primary">Sign up</button>
   </form>
 {% endblock %}
