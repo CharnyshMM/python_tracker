@@ -1,5 +1,5 @@
 # Create your views here.
-from django.db.models import Q
+
 from django.http import HttpResponse
 from django.template import loader
 
@@ -7,9 +7,10 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 
-from .forms import TaskForm, PlanForm
+from .forms import TaskForm, PlanForm, usernames_to_users
 from .models import TaskModel, PlanModel
 from functools import wraps
 from django.utils import timezone
@@ -35,7 +36,7 @@ def check_permissions(model):
 
 @login_required
 def index(request):
-    tasks_list = TaskModel.select_tasks_by_editor(request.user)
+    tasks_list = TaskModel.select_tasks_by_editor(request.user).distinct()
 
     key = request.GET.get('key')
     query = request.GET.get('query')
@@ -107,17 +108,13 @@ def new_task(request, object_id):
             if object_id != '0':
                 task.parent = TaskModel.objects.get(id=object_id)
 
-            users = form.cleaned_data.get('editors')
-            tags = form.cleaned_data['tags']
-            print(tags)
-            for u in users:
-                task.editors.add(u)
             task.save()
             form.save_m2m()
             return redirect('index')
     else:
         form = TaskForm()
-    return render(request, 'tracker_app/task_form.html', {'form': form})
+    users = User.objects.all()
+    return render(request, 'tracker_app/task_form.html', {'form': form, 'users': users})
 
 
 @login_required
@@ -126,6 +123,7 @@ def edit_task(request, object_id):
     if request.method == "POST":
         form = TaskForm(request.POST)
         if form.is_valid():
+
             task = form.save(commit=False)
             task.id = object_id
             task.save(update_fields=('title','start_time','end_time','priority'))

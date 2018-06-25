@@ -19,22 +19,15 @@ class Priority:
     )
 
 
-class TagModel(models.Model):
-    tag = models.CharField(max_length=100, null=False)
-
-    def __str__(self):
-        return self.tag
-
-
 class TaskModel(models.Model):
     title = models.CharField(max_length=200)
     author = models.ForeignKey(User, null=False)
-    editors = models.ManyToManyField(User, related_name='can_edit')
+    editors = models.ManyToManyField(User, related_name='can_edit', blank=True)
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
     parent = models.ForeignKey('self', null=True, blank=True)
     priority = models.IntegerField(choices=Priority.PRIORITY_CHOICES, default=Priority.MEDIUM)
-    tags = TaggableManager()
+    tags = TaggableManager(blank=True, help_text='input tags separated with spaces or commas')
 
     def get_parent(self):
         if self.parent:

@@ -9,26 +9,26 @@ class CommaSepMultiWordsCharField(forms.CharField):
     def to_python(self, value):
         return re.findall(r'(\w+)\W*',value)
 
-class CommaSepMultiUserField(CommaSepMultiWordsCharField):
-    def to_python(self, value):
-        usernames = super().to_python(value)
-        users = []
-        try:
-            for u in usernames:
-                user = User.objects.get(username=u)
-                users.append(user)
-        except ObjectDoesNotExist:
-            raise ValidationError('username incorrect')
-        return users
+
+def usernames_to_users(usernames):
+    users = []
+    try:
+        for u in usernames:
+            user = User.objects.get(username=u)
+            users.append(user)
+    except ObjectDoesNotExist:
+        raise ValidationError('username incorrect')
+    return users
 
 
 class TaskForm(forms.ModelForm):
-    editors = CommaSepMultiUserField(required=False)
+
     class Meta:
         model = TaskModel
-        fields = ('title','start_time','end_time','priority','tags')
+        fields = ('title','start_time','end_time','priority','tags', 'editors')
         widgets = {
-            'priority': forms.RadioSelect(choices=Priority.PRIORITY_CHOICES)
+            'priority': forms.Select(choices=Priority.PRIORITY_CHOICES),
+            'editors': forms.SelectMultiple(attrs={'id':'select_editors'}),
         }
 
 

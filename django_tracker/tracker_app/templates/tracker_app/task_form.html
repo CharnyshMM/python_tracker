@@ -1,14 +1,156 @@
+
+
 {% extends 'tracker_app/base.html' %}
 
-{% block title %}Task{% endblock %}
+{% load widget_tweaks %}
+
+{% block title %}New Task{% endblock %}
+{% block style %}
+    <link href="//cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="//cdn.bootcss.com/bootstrap-datetimepicker/4.17.44/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+
+{% endblock %}
 
 {% block content%}
+    <hr/>
+    <h1>Creating new task</h1>
+    <form id="task_form" method="post">
+        {% csrf_token %}
 
-    <h1>Task creation!</h1>
-    <form  method="post" role="form">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <input type="submit" value="Submit" />
-</form>
+        {{ form.non_field_errors }}
+
+        {{ form.source.errors }}
+        {{ form.source }}
+
+        {% if form.title.errors %}
+            <div class="alert alert-danger" role="alert">
+            {{form.title.errors}}
+            </div>
+        {% endif %}
+
+        <div class="form-group">
+          {{ form.title.label_tag }}
+          {% render_field form.title class="form-control" %}
+          {% if form.title.help_text %}
+            <small class="form-text text-muted">{{ field.help_text }}</small>
+          {% endif %}
+        </div>
+        <div class="form-group">
+            {{form.priority.label_tag}}
+            {% render_field form.priority class="form-control" %}
+        </div>
+        {% if form.start_time.errors %}
+            <div class="alert alert-danger" role="alert">
+            {{form.start_time.errors}}
+            </div>
+        {% endif %}
+
+        <div class="container">
+            <div class="row">
+                <div class='col-sm-6'>
+                    <div class="form-group">
+                        {{form.start_time.label_tag}}
+                        <div class='input-group date' id='datetimepicker1'>
+                            {% render_field form.start_time class="form-control" %}
+                            <span class="input-group-addon">
+                                <span class="glyphicon glyphicon-calendar"></span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    $(function () {
+                        $('#datetimepicker1').datetimepicker({format: 'YYYY-MM-DD HH:mm:ss'});
+                    });
+                </script>
+            </div>
+        </div>
+        {% if form.end_time.errors %}
+            <div class="alert alert-danger" role="alert">
+            {{form.end_time.errors}}
+            </div>
+        {% endif %}
+
+        <div class="container">
+            <div class="row">
+                <div class='col-sm-6'>
+                    <div class="form-group">
+                        {{form.end_time.label_tag}}
+                        <div class='input-group date' id='datetimepicker2'>
+                            {% render_field form.end_time class="form-control"%}
+                            <span class="input-group-addon">
+                                <span class="glyphicon glyphicon-calendar"></span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    $(function () {
+                        $('#datetimepicker2').datetimepicker({format: 'YYYY-MM-DD HH:mm:ss'});
+                    });
+                </script>
+            </div>
+        </div>
+        <div class="form-group">
+            {{form.tags.label_tag}}
+            {% render_field form.tags class="form-control"%}
+            {% if form.tags.help_text %}
+                <small class="form-text text-muted">{{ form.tags.help_text }}</small>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+         <div >
+            {{form.editors.label_tag}}
+
+            <input type="text" name="editor" placeholder="username" id="editor"/>
+            <input type="button" onclick="addOption()" value="Add Editor"/>
+            <input type="button" onclick="removeOption()" value="Pop Editor"/>
+        </div>
+        <div >
+        <small class="form-text text-muted">Type username and click add or remove or manually select users below</small>
+        {% render_field form.editors class="form-control"%}
+        </div>
+
+        <input type="submit" value="Submit" />
+        </div>
+    </form>
+
+<script>
+
+
+    function addOption() {
+
+        var username = document.getElementById("editor").value;
+        var select = document.getElementById("select_editors");
+        var found = false;
+        for (var i=0; i<select.options.length; i++) {
+            if (select.options[i].label === username) {
+                select.options[i].selected = true;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            alert("Incorrect username!!!");
+        }
+    }
+
+    function removeOption(){
+        var username = document.getElementById("editor").value;
+        var select = document.getElementById("select_editors");
+        var found = false;
+        for (var i=0; i<select.options.length; i++) {
+            if (select.options[i].label === username) {
+                select.options[i].selected = false;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            alert("Incorrect username!!!");
+        }
+    }
+</script>
 
 {% endblock %}
