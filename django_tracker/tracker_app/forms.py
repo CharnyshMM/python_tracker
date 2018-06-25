@@ -31,11 +31,21 @@ class TaskForm(forms.ModelForm):
             'editors': forms.SelectMultiple(attrs={'id':'select_editors'}),
         }
 
+    def clean(self):
+        cleaned_data = super().clean()
+        end_time = cleaned_data.get("end_time")
+        start_time = cleaned_data.get("start_time")
+        if start_time >= end_time:
+            msg = "Task start time can't be greater than end time!"
+            self.add_error("start_time", msg)
+
+
+
 
 class PlanForm(forms.Form):
     periods = ['yearly','monthly','daily']
     fixed_period = forms.ChoiceField(choices=[(p,p) for p in periods],required=False)
-    mode = forms.ChoiceField(choices=[('fixed', 'fixed'), ('custom', 'custom')],widget=forms.RadioSelect)
+    mode = forms.ChoiceField(choices=[('fixed', 'fixed'), ('custom', 'custom')])
     custom_period=forms.DurationField(required=False)
     end_time = forms.DateTimeField(required=False)
 
@@ -45,7 +55,6 @@ class PlanForm(forms.Form):
 
     def get_period(self):
         if self.get_mode() == 'fixed':
-            print('fixed')
             return self.cleaned_data['fixed_period']
         else:
             return self.cleaned_data['custom_period']
@@ -61,11 +70,3 @@ class PlanForm(forms.Form):
                          timedelta_period=self.get_period(),
                          end_time=self.cleaned_data['end_time'])
 
-
-class TaskListViewForm(forms.Form):
-    show_modes = ['priority', 'start_time', 'end_time', 'notifications']
-    filters = ['tags', 'title']
-    include_shared_tasks = forms.BooleanField(initial=True, label='Include shared tasks',required=False)
-    show_mode = forms.ChoiceField(choices=[(m, m) for m in show_modes], required=False)
-    selected_filter = forms.ChoiceField(choices=[(f, f) for f in filters])
-    text_field = CommaSepMultiWordsCharField(max_length=100, required=False)
